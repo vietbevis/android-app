@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">CapMoney</string>
+    <string name="destination_home">Trang chủ</string>
+    <string name="destination_statistics">Thống kê</string>
+    <string name="destination_accounts">Tài khoản</string>
+    <string name="destination_budgets">Ngân sách</string>
+    <string name="destination_profile">Cá nhân</string>
+    <string name="destination_capture">Thêm giao dịch</string>
+    <string name="destination_dashboard">Tổng quan</string>
+    <string name="destination_transactions">Giao dịch</string>
+    <string name="destination_wallets">Ví</string>
+    <string name="destination_settings">Cài đặt</string>
+    <string name="dashboard_title">Tổng quan tháng này</string>
+    <string name="capture_title">Chụp giao dịch</string>
+    <string name="transactions_title">Lịch sử giao dịch</string>
+    <string name="wallets_title">Ví và danh mục</string>
+    <string name="settings_title">Cài đặt</string>
+    <string name="action_add_transaction">Thêm giao dịch</string>
+    <string name="action_cancel">Hủy</string>
+</resources>
