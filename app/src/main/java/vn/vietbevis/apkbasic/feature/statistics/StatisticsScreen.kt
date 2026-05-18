@@ -23,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import vn.vietbevis.apkbasic.core.di.AppContainer
 import vn.vietbevis.apkbasic.domain.reporting.FinanceSummary
@@ -35,6 +36,8 @@ import vn.vietbevis.apkbasic.ui.theme.CapIncomeMint
 import vn.vietbevis.apkbasic.ui.theme.CapPrimaryBlue
 import vn.vietbevis.apkbasic.ui.theme.CapSurfaceHigh
 import vn.vietbevis.apkbasic.ui.theme.CapTextSecondary
+import vn.vietbevis.apkbasic.ui.theme.APKBasicTheme
+import vn.vietbevis.apkbasic.ui.theme.SnapCream
 
 @Composable
 fun StatisticsScreen(
@@ -169,6 +172,52 @@ private fun StatCard(
             )
             Text(title, color = CapTextSecondary)
             Text(value, style = MaterialTheme.typography.titleLarge, color = accent)
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Statistics Screen")
+@Composable
+private fun StatisticsScreenPreview() {
+    APKBasicTheme {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(SnapCream)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            item {
+                Column(Modifier.padding(top = 20.dp)) {
+                    Text("Thống kê", style = MaterialTheme.typography.headlineMedium)
+                    CapPillRow(Modifier.padding(top = 16.dp)) {
+                        CapStatusPill(text = "Tháng", selected = true)
+                        CapStatusPill(text = "Năm", selected = false)
+                    }
+                }
+            }
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    StatCard("Thu nhập", "8.000.000 đ", CapIncomeMint, Modifier.weight(1f))
+                    StatCard("Chi tiêu", "2.450.000 đ", CapExpenseCoral, Modifier.weight(1f))
+                }
+            }
+            item {
+                CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
+                    Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Text("Chi tiêu theo danh mục", style = MaterialTheme.typography.titleLarge)
+                        listOf("Ăn uống" to 0.62f, "Di chuyển" to 0.36f, "Mua sắm" to 0.24f).forEach { (label, fraction) ->
+                            Text(label)
+                            LinearProgressIndicator(
+                                progress = { fraction },
+                                modifier = Modifier.fillMaxWidth().height(8.dp),
+                                color = CapPrimaryBlue,
+                                trackColor = SnapCream,
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

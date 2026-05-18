@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">CapMoney</string>
+    <string name="app_name">SnapChi</string>
     <string name="destination_home">Trang chủ</string>
     <string name="destination_statistics">Thống kê</string>
     <string name="destination_accounts">Tài khoản</string>
@@ -17,4 +17,26 @@
     <string name="settings_title">Cài đặt</string>
     <string name="action_add_transaction">Thêm giao dịch</string>
     <string name="action_cancel">Hủy</string>
+    <string name="auth_product_label">Tài chính cá nhân</string>
+    <string name="auth_hero_message">Đăng nhập để đồng bộ ví, danh mục và giao dịch của bạn trên Supabase.</string>
+    <string name="auth_chip_sync">Đồng bộ an toàn</string>
+    <string name="auth_chip_camera">Camera-first</string>
+    <string name="auth_chip_wallets">Theo dõi ví</string>
+    <string name="auth_sign_in_title">Đăng nhập</string>
+    <string name="auth_sign_in_description">Tiếp tục quản lý dòng tiền, hóa đơn và các ví của bạn.</string>
+    <string name="auth_sign_up_title">Tạo tài khoản</string>
+    <string name="auth_sign_up_description">Bắt đầu với một không gian tài chính riêng, an toàn và sẵn sàng đồng bộ.</string>
+    <string name="auth_email_label">Email</string>
+    <string name="auth_email_placeholder">Nhập email của bạn</string>
+    <string name="auth_email_supporting_text">Dùng email bạn sẽ dùng để khôi phục tài khoản.</string>
+    <string name="auth_password_label">Mật khẩu</string>
+    <string name="auth_password_placeholder">Nhập mật khẩu</string>
+    <string name="auth_password_supporting_text">Tối thiểu 6 ký tự.</string>
+    <string name="auth_confirm_password_label">Nhập lại mật khẩu</string>
+    <string name="auth_action_sign_in">Đăng nhập</string>
+    <string name="auth_action_sign_up">Đăng ký</string>
+    <string name="auth_action_have_account">Đã có tài khoản</string>
+    <string name="auth_action_create_account">Tạo tài khoản</string>
+    <string name="auth_switch_to_sign_in_hint">Quay lại đăng nhập</string>
+    <string name="auth_switch_to_sign_up_hint">Tạo tài khoản mới</string>
 </resources>

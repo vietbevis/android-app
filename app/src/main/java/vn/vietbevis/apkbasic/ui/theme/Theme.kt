@@ -1,63 +1,81 @@
 package vn.vietbevis.apkbasic.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = CapPrimaryBlue,
-    onPrimary = CapTextPrimary,
-    primaryContainer = CapPrimaryBlueBright,
-    onPrimaryContainer = CapTextPrimary,
-    secondary = CapIncomeMint,
-    onSecondary = CapBackground,
-    tertiary = CapPremiumYellow,
-    onTertiary = CapBackground,
-    background = CapBackground,
-    onBackground = CapTextPrimary,
-    surface = CapBackground,
-    onSurface = CapTextPrimary,
-    surfaceVariant = CapSurface,
-    onSurfaceVariant = CapTextSecondary,
-    surfaceContainer = CapSurface,
-    surfaceContainerHigh = CapSurfaceHigh,
-    outline = CapDivider,
-    error = CapExpenseCoral,
+private val SnapLightColorScheme = lightColorScheme(
+    primary = SnapCoral,
+    onPrimary = SnapWhite,
+    primaryContainer = SnapCoralSoft,
+    onPrimaryContainer = SnapNavy,
+    secondary = SnapMint,
+    onSecondary = SnapNavy,
+    secondaryContainer = SnapSoftYellow,
+    onSecondaryContainer = SnapNavy,
+    tertiary = SnapYellow,
+    onTertiary = SnapNavy,
+    tertiaryContainer = SnapSoftYellow,
+    onTertiaryContainer = SnapNavy,
+    background = SnapCream,
+    onBackground = SnapNavy,
+    surface = SnapCream,
+    onSurface = SnapNavy,
+    surfaceVariant = SnapCreamSurface,
+    onSurfaceVariant = SnapSlate,
+    surfaceContainer = SnapCreamSurface,
+    surfaceContainerHigh = SnapSoftYellow,
+    outline = SnapBorder,
+    outlineVariant = SnapBorderSoft,
+    error = SnapError,
+    onError = SnapWhite,
+    errorContainer = SnapError.copy(alpha = 0.14f),
+    onErrorContainer = SnapError,
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = CashGreen40,
-    secondary = LedgerBlue40,
-    tertiary = ReceiptGold40,
-    error = ExpenseCoral40,
+private val SnapDarkColorScheme = darkColorScheme(
+    primary = SnapCoral,
+    onPrimary = SnapWhite,
+    primaryContainer = SnapNavy,
+    onPrimaryContainer = SnapWhite,
+    secondary = SnapMint,
+    onSecondary = SnapNavy,
+    tertiary = SnapYellow,
+    onTertiary = SnapNavy,
+    background = SnapNavy,
+    onBackground = SnapWhite,
+    surface = SnapNavy,
+    onSurface = SnapWhite,
+    surfaceVariant = SnapSlate,
+    onSurfaceVariant = SnapCoralSoft,
+    surfaceContainer = SnapNavy,
+    surfaceContainerHigh = SnapSlate,
+    outline = SnapBorder,
+    error = SnapError,
 )
 
 @Composable
 fun APKBasicTheme(
-    darkTheme: Boolean = true,
+    darkTheme: Boolean = false,
     dynamicColor: Boolean = false,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !isSystemInDarkTheme() -> {
+            dynamicLightColorScheme(LocalContext.current)
         }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+        darkTheme -> SnapDarkColorScheme
+        else -> SnapLightColorScheme
     }
 
     MaterialTheme(
         colorScheme = colorScheme,
         typography = Typography,
-        content = content
+        content = content,
     )
 }

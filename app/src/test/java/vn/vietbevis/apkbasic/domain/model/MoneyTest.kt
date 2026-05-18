@@ -8,7 +8,7 @@ import org.junit.Test
 class MoneyTest {
     @Test
     fun vndFormatsWithDotGrouping() {
-        assertEquals("1.250.000 d", Money.vnd(1_250_000).formatVnd())
+        assertEquals("1.250.000 đ", Money.vnd(1_250_000).formatVnd())
     }
 
     @Test

@@ -8,7 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.Preview
+import androidx.camera.core.Preview as CameraXPreview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
@@ -56,6 +56,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -63,10 +64,16 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import vn.vietbevis.apkbasic.core.di.AppContainer
 import vn.vietbevis.apkbasic.domain.model.TransactionType
 import vn.vietbevis.apkbasic.domain.model.UserProfile
+import vn.vietbevis.apkbasic.ui.components.SnapCard
+import vn.vietbevis.apkbasic.ui.components.SnapPrimaryButton
+import vn.vietbevis.apkbasic.ui.components.SnapTextField
 import vn.vietbevis.apkbasic.ui.theme.CapExpenseCoral
 import vn.vietbevis.apkbasic.ui.theme.CapIncomeMint
 import vn.vietbevis.apkbasic.ui.theme.CapSurface
 import vn.vietbevis.apkbasic.ui.theme.CapTextSecondary
+import vn.vietbevis.apkbasic.ui.theme.SnapCream
+import vn.vietbevis.apkbasic.ui.theme.SnapSoftYellow
+import vn.vietbevis.apkbasic.ui.theme.APKBasicTheme
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -171,6 +178,7 @@ private fun PermissionRationale(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(SnapCream)
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -184,12 +192,11 @@ private fun PermissionRationale(
             modifier = Modifier.padding(top = 8.dp),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Button(
+        SnapPrimaryButton(
+            text = "Cấp quyền camera",
             onClick = onRequestPermission,
             modifier = Modifier.padding(top = 20.dp),
-        ) {
-            Text("Cấp quyền camera")
-        }
+        )
     }
 }
 
@@ -200,10 +207,9 @@ private fun AmountCalculatorPanel(
     enabled: Boolean,
     onCalculatorKey: (CalculatorKey) -> Unit,
 ) {
-    Surface(
+    SnapCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
-        color = CapSurface,
+        containerColor = SnapSoftYellow,
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(
@@ -221,7 +227,7 @@ private fun AmountCalculatorPanel(
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.ExtraBold,
                 )
-                Text(" d", color = CapTextSecondary, style = MaterialTheme.typography.titleLarge)
+                Text(" đ", color = CapTextSecondary, style = MaterialTheme.typography.titleLarge)
             }
             Text(
                 text = "Thêm chi tiết",
@@ -296,11 +302,10 @@ private fun CaptureForm(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(SnapCream)
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
     ) {
-        Text("Chụp giao dịch", style = MaterialTheme.typography.headlineSmall)
-        Spacer(Modifier.height(12.dp))
         PhotoCapturePanel(
             photoPath = uiState.selectedPhotoPath,
             isSaving = uiState.isSaving,
@@ -365,13 +370,13 @@ private fun CaptureForm(
             Text(text = it, color = MaterialTheme.colorScheme.primary)
         }
         Spacer(Modifier.height(16.dp))
-        Button(
+        SnapPrimaryButton(
+            text = if (uiState.isSaving) "Đang lưu..." else "Lưu giao dịch",
             onClick = onSave,
             modifier = Modifier.fillMaxWidth(),
             enabled = !uiState.isSaving && uiState.wallets.isNotEmpty(),
-        ) {
-            Text(if (uiState.isSaving) "Đang lưu..." else "Lưu giao dịch")
-        }
+            isLoading = uiState.isSaving,
+        )
         if (uiState.canSaveWithoutPhoto) {
             OutlinedButton(
                 onClick = onSaveWithoutPhoto,
@@ -515,7 +520,7 @@ private fun CameraPreview(
 
     LaunchedEffect(lensFacing, flashEnabled) {
         val cameraProvider = ProcessCameraProvider.getInstance(context).get()
-        val preview = Preview.Builder().build().also {
+        val preview = CameraXPreview.Builder().build().also {
             it.setSurfaceProvider(previewView.surfaceProvider)
         }
         val imageCapture = ImageCapture.Builder()
@@ -643,6 +648,55 @@ private fun OccurredAtRow(
             enabled = enabled,
         ) {
             Text("Bây giờ")
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Capture Screen")
+@Composable
+private fun CaptureScreenPreview() {
+    APKBasicTheme {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(SnapCream)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            Text("Quét biên lai", style = MaterialTheme.typography.headlineMedium)
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(3f / 4f),
+                shape = MaterialTheme.shapes.medium,
+                color = Color.Black,
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text("Camera preview", color = Color.White)
+                }
+            }
+            AmountCalculatorPanel(
+                calculatorState = CalculatorState(display = "120000"),
+                transactionType = TransactionType.EXPENSE,
+                enabled = false,
+                onCalculatorKey = {},
+            )
+            TypeSelector(
+                selectedType = TransactionType.EXPENSE,
+                enabled = false,
+                onTypeChange = {},
+            )
+            SnapTextField(
+                value = "Ăn trưa",
+                onValueChange = {},
+                label = "Ghi chú",
+                enabled = false,
+            )
+            SnapPrimaryButton(
+                text = "Lưu giao dịch",
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }

@@ -2,24 +2,39 @@ package vn.vietbevis.apkbasic.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val CapBackground = Color(0xFF071121)
-val CapSurface = Color(0xFF0F1E36)
-val CapSurfaceHigh = Color(0xFF142744)
-val CapSurfaceMuted = Color(0xFF263246)
-val CapPrimaryBlue = Color(0xFF4E9BE6)
-val CapPrimaryBlueBright = Color(0xFF1088FF)
-val CapIncomeMint = Color(0xFF65D2B0)
-val CapExpenseCoral = Color(0xFFFF6C82)
-val CapPremiumYellow = Color(0xFFFFC928)
-val CapTextPrimary = Color(0xFFF8FAFF)
-val CapTextSecondary = Color(0xFF9EA8B8)
-val CapDivider = Color(0xFF2B3B55)
+val SnapCream = Color(0xFFFFF9E3)
+val SnapCreamSurface = Color(0xFFFFF7E5)
+val SnapSoftYellow = Color(0xFFF6ECC9)
+val SnapBorder = Color(0xFFC6BFA2)
+val SnapBorderSoft = Color(0xFFE1DBCA)
+val SnapNavy = Color(0xFF081226)
+val SnapSlate = Color(0xFF435875)
+val SnapCoral = Color(0xFFEA7A53)
+val SnapCoralSoft = Color(0xFFFFEAE2)
+val SnapBlue = Color(0xFF99B7DD)
+val SnapMint = Color(0xFF8BCBB8)
+val SnapYellow = Color(0xFFF7D44C)
+val SnapWhite = Color(0xFFFFFFFF)
+val SnapError = Color(0xFFC44536)
 
-val CashGreen80 = CapIncomeMint
-val LedgerBlue80 = Color(0xFF9DB8D6)
-val ReceiptGold80 = Color(0xFFF2C96D)
+val CapBackground = SnapCream
+val CapSurface = SnapCreamSurface
+val CapSurfaceHigh = SnapSoftYellow
+val CapSurfaceMuted = SnapBorderSoft
+val CapPrimaryBlue = SnapCoral
+val CapPrimaryBlueBright = SnapCoral
+val CapIncomeMint = SnapMint
+val CapExpenseCoral = SnapError
+val CapPremiumYellow = SnapYellow
+val CapTextPrimary = SnapNavy
+val CapTextSecondary = SnapSlate
+val CapDivider = SnapBorder
 
-val CashGreen40 = Color(0xFF167A55)
-val LedgerBlue40 = Color(0xFF34516F)
-val ReceiptGold40 = Color(0xFF8A6200)
-val ExpenseCoral40 = Color(0xFFB5473A)
+val CashGreen80 = SnapMint
+val LedgerBlue80 = SnapBlue
+val ReceiptGold80 = SnapYellow
+
+val CashGreen40 = SnapMint
+val LedgerBlue40 = SnapBlue
+val ReceiptGold40 = SnapYellow
+val ExpenseCoral40 = SnapError

@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import vn.vietbevis.apkbasic.core.di.AppContainer
 import vn.vietbevis.apkbasic.domain.model.UserProfile
@@ -37,6 +38,8 @@ import vn.vietbevis.apkbasic.ui.theme.CapIncomeMint
 import vn.vietbevis.apkbasic.ui.theme.CapPrimaryBlue
 import vn.vietbevis.apkbasic.ui.theme.CapSurfaceHigh
 import vn.vietbevis.apkbasic.ui.theme.CapTextSecondary
+import vn.vietbevis.apkbasic.ui.theme.APKBasicTheme
+import vn.vietbevis.apkbasic.ui.theme.SnapCream
 
 @Composable
 fun AccountsScreen(
@@ -300,6 +303,50 @@ private fun ActionTile(
     CapCard(modifier = modifier, containerColor = CapPrimaryBlue) {
         Box(Modifier.padding(20.dp), contentAlignment = Alignment.Center) {
             Text(text, style = MaterialTheme.typography.titleMedium)
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Accounts Screen")
+@Composable
+private fun AccountsScreenPreview() {
+    APKBasicTheme {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(SnapCream)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            item {
+                Column(Modifier.padding(top = 20.dp)) {
+                    Text("Tài khoản", style = MaterialTheme.typography.headlineMedium)
+                    CapPillRow(Modifier.padding(top = 16.dp)) {
+                        CapStatusPill(text = "Tài khoản", selected = true)
+                        CapStatusPill(text = "Khoản vay", selected = false)
+                        CapStatusPill(text = "Đầu tư", selected = false)
+                    }
+                }
+            }
+            item {
+                CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
+                    Column(Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Tổng số dư", color = CapTextSecondary)
+                        Text("12.450.000 đ", style = MaterialTheme.typography.headlineLarge, color = CapIncomeMint)
+                    }
+                }
+            }
+            items(listOf("Tiền mặt" to "2.000.000 đ", "Ngân hàng" to "10.450.000 đ")) { (name, balance) ->
+                CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
+                    Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(name, style = MaterialTheme.typography.titleLarge)
+                            Text("Ví cá nhân", color = CapTextSecondary)
+                        }
+                        Text(balance, color = CapIncomeMint, style = MaterialTheme.typography.titleMedium)
+                    }
+                }
+            }
         }
     }
 }

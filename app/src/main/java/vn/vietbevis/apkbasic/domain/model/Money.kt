@@ -18,7 +18,7 @@ data class Money(
         val symbols = DecimalFormatSymbols(Locale.US).apply {
             groupingSeparator = '.'
         }
-        return DecimalFormat("#,###", symbols).format(minorUnits) + " d"
+        return DecimalFormat("#,###", symbols).format(minorUnits) + " đ"
     }
 
     companion object {

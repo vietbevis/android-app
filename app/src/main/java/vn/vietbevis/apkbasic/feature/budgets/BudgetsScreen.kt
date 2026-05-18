@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import vn.vietbevis.apkbasic.core.di.AppContainer
 import vn.vietbevis.apkbasic.domain.model.UserProfile
@@ -34,6 +35,8 @@ import vn.vietbevis.apkbasic.ui.theme.CapIncomeMint
 import vn.vietbevis.apkbasic.ui.theme.CapPrimaryBlue
 import vn.vietbevis.apkbasic.ui.theme.CapSurfaceHigh
 import vn.vietbevis.apkbasic.ui.theme.CapTextSecondary
+import vn.vietbevis.apkbasic.ui.theme.APKBasicTheme
+import vn.vietbevis.apkbasic.ui.theme.SnapCream
 
 @Composable
 fun BudgetsScreen(
@@ -156,5 +159,52 @@ private fun BudgetValue(title: String, value: String, color: androidx.compose.ui
     Column {
         Text(title, color = CapTextSecondary)
         Text(value, color = color, style = MaterialTheme.typography.titleMedium)
+    }
+}
+
+@Preview(showBackground = true, name = "Budgets Screen")
+@Composable
+private fun BudgetsScreenPreview() {
+    APKBasicTheme {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(SnapCream)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            item {
+                Column(Modifier.padding(top = 20.dp)) {
+                    Text("Ngân sách", style = MaterialTheme.typography.headlineMedium)
+                    Text("Theo dõi mức chi hằng tháng", color = CapTextSecondary)
+                }
+            }
+            item {
+                CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
+                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Thêm ngân sách", style = MaterialTheme.typography.titleLarge)
+                        Text("Tên ngân sách", color = CapTextSecondary)
+                        Text("Số tiền ngân sách", color = CapTextSecondary)
+                    }
+                }
+            }
+            item {
+                CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
+                    Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        Text("Ăn uống", style = MaterialTheme.typography.titleLarge)
+                        LinearProgressIndicator(
+                            progress = { 0.62f },
+                            modifier = Modifier.fillMaxWidth().height(10.dp),
+                            color = CapPrimaryBlue,
+                            trackColor = SnapCream,
+                        )
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            BudgetValue("Đã chi", "1.240.000 đ", CapExpenseCoral)
+                            BudgetValue("Còn lại", "760.000 đ", CapIncomeMint)
+                        }
+                    }
+                }
+            }
+        }
     }
 }

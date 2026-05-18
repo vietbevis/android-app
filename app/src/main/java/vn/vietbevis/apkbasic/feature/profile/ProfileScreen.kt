@@ -26,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import vn.vietbevis.apkbasic.core.di.AppContainer
 import vn.vietbevis.apkbasic.domain.model.AppLanguage
@@ -39,6 +40,8 @@ import vn.vietbevis.apkbasic.ui.theme.CapIncomeMint
 import vn.vietbevis.apkbasic.ui.theme.CapPrimaryBlue
 import vn.vietbevis.apkbasic.ui.theme.CapSurfaceHigh
 import vn.vietbevis.apkbasic.ui.theme.CapTextSecondary
+import vn.vietbevis.apkbasic.ui.theme.APKBasicTheme
+import vn.vietbevis.apkbasic.ui.theme.SnapCream
 
 @Composable
 fun ProfileScreen(
@@ -320,6 +323,49 @@ private fun OverviewTile(
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(title, color = CapTextSecondary)
             Text(value, style = MaterialTheme.typography.titleLarge, color = accent)
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Profile Screen")
+@Composable
+private fun ProfileScreenPreview() {
+    APKBasicTheme {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(SnapCream)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            item {
+                CapCard(modifier = Modifier.fillMaxWidth().padding(top = 20.dp), containerColor = CapSurfaceHigh) {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Text("SnapChi", style = MaterialTheme.typography.headlineMedium)
+                        Text("Hồ sơ cá nhân", color = CapTextSecondary)
+                    }
+                }
+            }
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    OverviewTile("Giao dịch", "24", Modifier.weight(1f))
+                    OverviewTile("Thu nhập", "8.000.000 đ", Modifier.weight(1f), CapIncomeMint)
+                }
+            }
+            item {
+                CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
+                    Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text("Cài đặt dữ liệu", style = MaterialTheme.typography.titleLarge)
+                        Text("Ngôn ngữ · Tiếng Việt", color = CapTextSecondary)
+                        Text("Giao diện · Sáng", color = CapTextSecondary)
+                        Text("Tiền tệ · VND", color = CapTextSecondary)
+                    }
+                }
+            }
         }
     }
 }

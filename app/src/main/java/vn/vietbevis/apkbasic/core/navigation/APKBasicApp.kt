@@ -1,23 +1,26 @@
 package vn.vietbevis.apkbasic.core.navigation
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -34,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import vn.vietbevis.apkbasic.R
 import vn.vietbevis.apkbasic.core.di.AppContainer
 import vn.vietbevis.apkbasic.domain.model.UserProfile
+import vn.vietbevis.apkbasic.feature.accounts.AccountsScreen
 import vn.vietbevis.apkbasic.feature.auth.AuthScreen
 import vn.vietbevis.apkbasic.feature.auth.AuthViewModel
 import vn.vietbevis.apkbasic.feature.budgets.BudgetsScreen
@@ -41,9 +45,13 @@ import vn.vietbevis.apkbasic.feature.capture.CaptureScreen
 import vn.vietbevis.apkbasic.feature.home.HomeScreen
 import vn.vietbevis.apkbasic.feature.profile.ProfileScreen
 import vn.vietbevis.apkbasic.feature.statistics.StatisticsScreen
-import vn.vietbevis.apkbasic.feature.accounts.AccountsScreen
-import vn.vietbevis.apkbasic.ui.theme.CapBackground
+import vn.vietbevis.apkbasic.ui.components.SnapIconButton
+import vn.vietbevis.apkbasic.ui.components.SnapTopBar
 import vn.vietbevis.apkbasic.ui.theme.APKBasicTheme
+import vn.vietbevis.apkbasic.ui.theme.SnapCoral
+import vn.vietbevis.apkbasic.ui.theme.SnapCream
+import vn.vietbevis.apkbasic.ui.theme.SnapNavy
+import vn.vietbevis.apkbasic.ui.theme.SnapWhite
 
 @Composable
 fun APKBasicApp(appContainer: AppContainer = remember { AppContainer() }) {
@@ -65,7 +73,7 @@ fun APKBasicApp(appContainer: AppContainer = remember { AppContainer() }) {
             onToggleMode = authViewModel::toggleMode,
             onSubmit = authViewModel::submit,
         )
-        else -> MainAppScaffold(
+        else -> MainAppShell(
             appContainer = appContainer,
             userProfile = requireNotNull(authState.authenticatedProfile),
             onSignOut = authViewModel::signOut,
@@ -76,15 +84,17 @@ fun APKBasicApp(appContainer: AppContainer = remember { AppContainer() }) {
 @Composable
 private fun LoadingScreen() {
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(SnapCream),
         contentAlignment = Alignment.Center,
     ) {
-        CircularProgressIndicator()
+        CircularProgressIndicator(color = SnapCoral)
     }
 }
 
 @Composable
-private fun MainAppScaffold(
+private fun MainAppShell(
     appContainer: AppContainer,
     userProfile: UserProfile,
     onSignOut: () -> Unit,
@@ -101,66 +111,90 @@ private fun MainAppScaffold(
         return
     }
 
-    NavigationSuiteScaffold(
-        navigationSuiteItems = {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(SnapCream),
+    ) {
+        val contentModifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+
+        when (currentDestination) {
+            AppDestination.HOME -> HomeScreen(
+                modifier = contentModifier,
+                appContainer = appContainer,
+                userProfile = userProfile,
+                onOpenCapture = { showCapture = true },
+            )
+            AppDestination.STATISTICS -> StatisticsScreen(
+                modifier = contentModifier,
+                appContainer = appContainer,
+            )
+            AppDestination.ACCOUNTS -> AccountsScreen(
+                modifier = contentModifier,
+                appContainer = appContainer,
+                userProfile = userProfile,
+            )
+            AppDestination.BUDGETS -> BudgetsScreen(
+                modifier = contentModifier,
+                appContainer = appContainer,
+                userProfile = userProfile,
+            )
+            AppDestination.PROFILE -> ProfileScreen(
+                modifier = contentModifier,
+                appContainer = appContainer,
+                userProfile = userProfile,
+                onSignOut = onSignOut,
+            )
+        }
+
+        SnapBottomBar(
+            currentDestination = currentDestination,
+            onDestinationSelected = { currentDestination = it },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+        )
+    }
+}
+
+@Composable
+private fun SnapBottomBar(
+    currentDestination: AppDestination,
+    onDestinationSelected: (AppDestination) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(10000.dp),
+        color = SnapNavy,
+        contentColor = SnapWhite,
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 34.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             AppDestination.entries.forEach { destination ->
-                item(
-                    icon = {
+                val selected = currentDestination == destination
+                Surface(
+                    onClick = { onDestinationSelected(destination) },
+                    modifier = Modifier.size(46.dp),
+                    shape = CircleShape,
+                    color = if (selected) SnapCoral else SnapNavy,
+                    contentColor = SnapWhite,
+                    border = if (selected) null else BorderStroke(1.dp, SnapNavy),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
                         Icon(
                             painter = painterResource(destination.iconRes),
                             contentDescription = stringResource(destination.labelRes),
+                            modifier = Modifier.size(26.dp),
                         )
-                    },
-                    label = { Text(stringResource(destination.labelRes)) },
-                    selected = destination == currentDestination,
-                    onClick = { currentDestination = destination },
-                )
-            }
-        },
-    ) {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            containerColor = CapBackground,
-            floatingActionButton = {
-                FloatingActionButton(onClick = { showCapture = true }) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_plus),
-                        contentDescription = stringResource(R.string.action_add_transaction),
-                    )
+                    }
                 }
-            },
-        ) { innerPadding ->
-            val modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-
-            when (currentDestination) {
-                AppDestination.HOME -> HomeScreen(
-                    modifier = modifier,
-                    appContainer = appContainer,
-                    userProfile = userProfile,
-                    onOpenCapture = { showCapture = true },
-                )
-                AppDestination.STATISTICS -> StatisticsScreen(
-                    modifier = modifier,
-                    appContainer = appContainer,
-                )
-                AppDestination.ACCOUNTS -> AccountsScreen(
-                    modifier = modifier,
-                    appContainer = appContainer,
-                    userProfile = userProfile,
-                )
-                AppDestination.BUDGETS -> BudgetsScreen(
-                    modifier = modifier,
-                    appContainer = appContainer,
-                    userProfile = userProfile,
-                )
-                AppDestination.PROFILE -> ProfileScreen(
-                    modifier = modifier,
-                    appContainer = appContainer,
-                    userProfile = userProfile,
-                    onSignOut = onSignOut,
-                )
             }
         }
     }
@@ -177,20 +211,20 @@ private fun CaptureModalContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(CapBackground)
+            .background(SnapCream)
             .statusBarsPadding(),
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            TextButton(onClick = onClose) {
-                Text(stringResource(R.string.action_cancel))
-            }
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.destination_capture))
-        }
-        Spacer(Modifier.height(4.dp))
+        SnapTopBar(
+            title = stringResource(R.string.destination_capture),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            navigationIcon = {
+                SnapIconButton(
+                    iconRes = R.drawable.ic_close,
+                    contentDescription = stringResource(R.string.action_cancel),
+                    onClick = onClose,
+                )
+            },
+        )
         CaptureScreen(
             modifier = Modifier
                 .fillMaxSize()
