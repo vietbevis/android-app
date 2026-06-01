@@ -9,16 +9,19 @@ data class ProfileDto(
     @SerialName("id") val id: String,
     @SerialName("display_name") val displayName: String? = null,
     @SerialName("currency") val currency: String = "VND",
+    @SerialName("avatar") val avatar: String? = null,
 )
 
 fun ProfileDto.toDomain(): UserProfile = UserProfile(
     id = id,
     displayName = displayName,
     currency = currency,
+    avatar = avatar,
 )
 
 fun UserProfile.toDto(): ProfileDto = ProfileDto(
     id = id,
     displayName = displayName,
     currency = currency,
+    avatar = avatar,
 )

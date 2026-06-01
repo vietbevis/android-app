@@ -77,6 +77,7 @@ fun APKBasicApp(appContainer: AppContainer = remember { AppContainer() }) {
             appContainer = appContainer,
             userProfile = requireNotNull(authState.authenticatedProfile),
             onSignOut = authViewModel::signOut,
+            onProfileUpdated = authViewModel::updateProfile,
         )
     }
 }
@@ -98,6 +99,7 @@ private fun MainAppShell(
     appContainer: AppContainer,
     userProfile: UserProfile,
     onSignOut: () -> Unit,
+    onProfileUpdated: (UserProfile) -> Unit,
 ) {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestination.HOME) }
     var showCapture by rememberSaveable { mutableStateOf(false) }
@@ -126,6 +128,7 @@ private fun MainAppShell(
                 appContainer = appContainer,
                 userProfile = userProfile,
                 onOpenCapture = { showCapture = true },
+                onOpenProfile = { currentDestination = AppDestination.PROFILE }
             )
             AppDestination.STATISTICS -> StatisticsScreen(
                 modifier = contentModifier,
@@ -146,6 +149,7 @@ private fun MainAppShell(
                 appContainer = appContainer,
                 userProfile = userProfile,
                 onSignOut = onSignOut,
+                onProfileUpdated = onProfileUpdated
             )
         }
 

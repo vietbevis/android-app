@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -31,6 +32,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,6 +43,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.layout.ContentScale
+import coil3.compose.AsyncImage
 import vn.vietbevis.apkbasic.R
 import vn.vietbevis.apkbasic.ui.theme.APKBasicTheme
 import vn.vietbevis.apkbasic.ui.theme.CapDivider
@@ -285,6 +289,50 @@ fun SnapSummaryBanner(
                 Text(amount, style = MaterialTheme.typography.headlineLarge, color = SnapWhite)
                 Text(meta, style = MaterialTheme.typography.titleLarge, color = SnapWhite)
             }
+        }
+    }
+}
+
+@Composable
+fun SnapAvatar(
+    displayName: String?,
+    email: String?,
+    avatarUrl: String?,
+    modifier: Modifier = Modifier,
+    size: Dp = 100.dp,
+    updatedAt: Long = 0,
+) {
+    val fallbackChar = remember(displayName, email) {
+        val name = displayName?.trim()?.takeIf { it.isNotBlank() }
+            ?: email?.trim()?.takeIf { it.isNotBlank() }
+
+        when {
+            name.isNullOrBlank() -> "?"
+            name.contains("@") -> name.substringBefore("@").take(1).uppercase()
+            else -> name.take(1).uppercase()
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(SnapSoftYellow),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (!avatarUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = if (updatedAt > 0) "$avatarUrl?v=$updatedAt" else avatarUrl,
+                contentDescription = "Avatar",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Text(
+                text = fallbackChar,
+                style = MaterialTheme.typography.headlineLarge,
+                color = SnapNavy,
+            )
         }
     }
 }

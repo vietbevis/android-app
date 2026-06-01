@@ -131,6 +131,10 @@ class AuthViewModel(
         }
     }
 
+    fun updateProfile(profile: UserProfile) {
+        _uiState.update { it.copy(authenticatedProfile = profile) }
+    }
+
     private suspend fun bootstrapAndEnter(profile: UserProfile) {
         onboardingBootstrapper.ensureDefaults(profile)
             .onSuccess {

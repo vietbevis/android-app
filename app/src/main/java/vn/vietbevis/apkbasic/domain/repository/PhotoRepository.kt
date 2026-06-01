@@ -8,4 +8,9 @@ interface PhotoRepository {
     ): Result<String>
 
     suspend fun deleteTransactionPhoto(storagePath: String): Result<Unit>
+
+    suspend fun uploadAvatar(
+        userId: String,
+        bytes: ByteArray,
+    ): Result<String>
 }

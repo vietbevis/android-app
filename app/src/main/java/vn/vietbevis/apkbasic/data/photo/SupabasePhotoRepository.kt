@@ -32,4 +32,16 @@ class SupabasePhotoRepository(
     override suspend fun deleteTransactionPhoto(storagePath: String): Result<Unit> = appResult {
         client.storage["transaction-photos"].delete(storagePath)
     }
+
+    override suspend fun uploadAvatar(userId: String, bytes: ByteArray): Result<String> = appResult {
+        val storagePath = "$userId/avatar.jpg"
+        client.storage["avatars"].upload(
+            path = storagePath,
+            data = bytes,
+        ) {
+            upsert = true
+            contentType = ContentType.Image.JPEG
+        }
+        client.storage["avatars"].publicUrl(storagePath)
+    }
 }

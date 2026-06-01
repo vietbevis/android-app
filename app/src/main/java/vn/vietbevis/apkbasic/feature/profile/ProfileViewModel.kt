@@ -26,6 +26,7 @@ import vn.vietbevis.apkbasic.domain.model.UserPreference
 import vn.vietbevis.apkbasic.domain.model.UserProfile
 import vn.vietbevis.apkbasic.domain.model.Wallet
 import vn.vietbevis.apkbasic.domain.model.WeekStart
+import vn.vietbevis.apkbasic.domain.repository.AuthRepository
 import vn.vietbevis.apkbasic.domain.repository.CategoryRepository
 import vn.vietbevis.apkbasic.domain.repository.RecurringTransactionRepository
 import vn.vietbevis.apkbasic.domain.repository.SharingRepository
@@ -35,6 +36,7 @@ import vn.vietbevis.apkbasic.domain.repository.WalletRepository
 import java.util.UUID
 
 data class ProfileUiState(
+    val userProfile: UserProfile,
     val isLoading: Boolean = true,
     val transactionCount: Int = 0,
     val income: Money = Money.vnd(0),
@@ -52,6 +54,8 @@ data class ProfileUiState(
     val recurringNoteInput: String = "",
     val friendUserIdInput: String = "",
     val groupNameInput: String = "",
+    val displayNameInput: String = "",
+    val avatarInput: String = "",
     val selectedShareGroupId: String? = null,
     val selectedWalletId: String? = null,
     val selectedCategoryId: String? = null,
@@ -60,15 +64,18 @@ data class ProfileUiState(
 )
 
 class ProfileViewModel(
-    private val userProfile: UserProfile,
+    private var userProfile: UserProfile,
+    private val authRepository: AuthRepository,
+    private val photoRepository: vn.vietbevis.apkbasic.domain.repository.PhotoRepository,
     private val transactionRepository: TransactionRepository,
     private val recurringTransactionRepository: RecurringTransactionRepository,
     private val userPreferenceRepository: UserPreferenceRepository,
     private val sharingRepository: SharingRepository,
     private val walletRepository: WalletRepository,
     private val categoryRepository: CategoryRepository,
+    private val onProfileUpdated: (UserProfile) -> Unit = {},
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(ProfileUiState())
+    private val _uiState = MutableStateFlow(ProfileUiState(userProfile = userProfile))
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
     init {
@@ -97,6 +104,7 @@ class ProfileViewModel(
             val expense = transactions.filter { it.type == TransactionType.EXPENSE }.sumOf { it.amount.minorUnits }
             _uiState.update {
                 it.copy(
+                    userProfile = userProfile, // Sync internal variable with state
                     isLoading = false,
                     transactionCount = transactions.size,
                     income = Money.vnd(income),
@@ -110,6 +118,8 @@ class ProfileViewModel(
                     sharedTransactions = sharedTransactions,
                     wallets = wallets,
                     categories = categories,
+                    displayNameInput = userProfile.displayName ?: "",
+                    avatarInput = userProfile.avatar ?: "",
                     selectedShareGroupId = it.selectedShareGroupId ?: groups.firstOrNull()?.id,
                     selectedWalletId = it.selectedWalletId ?: wallets.firstOrNull()?.id,
                     selectedCategoryId = it.selectedCategoryId ?: categories.firstOrNull()?.id,
@@ -133,6 +143,76 @@ class ProfileViewModel(
 
     fun onGroupNameChange(value: String) {
         _uiState.update { it.copy(groupNameInput = value, errorMessage = null) }
+    }
+
+    fun onDisplayNameChange(value: String) {
+        _uiState.update { it.copy(displayNameInput = value, errorMessage = null) }
+    }
+
+    fun onAvatarChange(value: String) {
+        _uiState.update { it.copy(avatarInput = value, errorMessage = null) }
+    }
+
+    fun updateDisplayName(name: String) {
+        val newProfile = userProfile.copy(
+            displayName = name.trim().ifBlank { null },
+            updatedAt = System.currentTimeMillis()
+        )
+        viewModelScope.launch {
+            authRepository.updateProfile(newProfile)
+                .onSuccess { updated ->
+                    userProfile = updated
+                    _uiState.update { it.copy(userProfile = updated, infoMessage = "Đã cập nhật tên hiển thị.") }
+                    onProfileUpdated(updated)
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(errorMessage = error.userMessage()) }
+                }
+        }
+    }
+
+    fun uploadAvatar(bytes: ByteArray) {
+        viewModelScope.launch {
+            photoRepository.uploadAvatar(userProfile.id, bytes)
+                .onSuccess { publicUrl ->
+                    val newProfile = userProfile.copy(
+                        avatar = publicUrl,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                    authRepository.updateProfile(newProfile)
+                        .onSuccess { updated ->
+                            userProfile = updated
+                            _uiState.update { it.copy(userProfile = updated, infoMessage = "Đã cập nhật ảnh đại diện.") }
+                            onProfileUpdated(updated)
+                        }
+                        .onFailure { error ->
+                            _uiState.update { it.copy(errorMessage = error.userMessage()) }
+                        }
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(errorMessage = "Không thể tải ảnh lên: ${error.userMessage()}") }
+                }
+        }
+    }
+
+    fun updateProfile() {
+        val state = _uiState.value
+        val newProfile = userProfile.copy(
+            displayName = state.displayNameInput.trim().ifBlank { null },
+            avatar = state.avatarInput.trim().ifBlank { null }
+        )
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            authRepository.updateProfile(newProfile)
+                .onSuccess { updated ->
+                    userProfile = updated
+                    _uiState.update { it.copy(userProfile = updated, isLoading = false, infoMessage = "Đã cập nhật hồ sơ.") }
+                    refresh()
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(isLoading = false, errorMessage = error.userMessage()) }
+                }
+        }
     }
 
     fun onShareGroupSelected(groupId: String) {

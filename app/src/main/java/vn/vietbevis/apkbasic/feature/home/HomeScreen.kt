@@ -1,6 +1,7 @@
 package vn.vietbevis.apkbasic.feature.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,6 +40,7 @@ import vn.vietbevis.apkbasic.domain.model.Transaction
 import vn.vietbevis.apkbasic.domain.model.TransactionType
 import vn.vietbevis.apkbasic.domain.model.UserProfile
 import vn.vietbevis.apkbasic.domain.model.Wallet
+import vn.vietbevis.apkbasic.ui.components.SnapAvatar
 import vn.vietbevis.apkbasic.ui.components.SnapCard
 import vn.vietbevis.apkbasic.ui.components.SnapColoredBanner
 import vn.vietbevis.apkbasic.ui.components.SnapIconButton
@@ -67,6 +69,7 @@ fun HomeScreen(
     appContainer: AppContainer,
     userProfile: UserProfile,
     onOpenCapture: () -> Unit,
+    onOpenProfile: () -> Unit = {},
 ) {
     val viewModel = remember {
         HomeViewModel(
@@ -79,7 +82,7 @@ fun HomeScreen(
 
     HomeContent(
         modifier = modifier,
-        userName = userProfile.displayName?.takeIf { it.isNotBlank() } ?: stringResource(R.string.app_name),
+        userProfile = userProfile,
         monthLabel = uiState.monthRange.label,
         monthExpense = uiState.monthExpense.formatVnd(),
         monthIncome = uiState.monthIncome.formatVnd(),
@@ -95,6 +98,7 @@ fun HomeScreen(
         errorMessage = uiState.errorMessage,
         onRefresh = viewModel::refresh,
         onOpenCapture = onOpenCapture,
+        onOpenProfile = onOpenProfile,
         onWalletSelected = viewModel::selectWallet,
         onDaySelected = viewModel::selectDay,
     )
@@ -102,7 +106,7 @@ fun HomeScreen(
 
 @Composable
 private fun HomeContent(
-    userName: String,
+    userProfile: UserProfile,
     monthLabel: String,
     monthExpense: String,
     monthIncome: String,
@@ -118,10 +122,13 @@ private fun HomeContent(
     errorMessage: String?,
     onRefresh: () -> Unit,
     onOpenCapture: () -> Unit,
+    onOpenProfile: () -> Unit,
     onWalletSelected: (String?) -> Unit,
     onDaySelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val userName = userProfile.displayName?.takeIf { it.isNotBlank() } ?: stringResource(R.string.app_name)
+    
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -133,7 +140,16 @@ private fun HomeContent(
             SnapTopBar(
                 title = userName,
                 modifier = Modifier.padding(top = 12.dp),
-                navigationIcon = { AvatarInitial(userName) },
+                navigationIcon = {
+                    SnapAvatar(
+                        displayName = userProfile.displayName,
+                        email = userProfile.email,
+                        avatarUrl = userProfile.avatar,
+                        size = 42.dp,
+                        updatedAt = userProfile.updatedAt,
+                        modifier = Modifier.clickable { onOpenProfile() }
+                    )
+                },
                 actionIcon = {
                     SnapIconButton(
                         iconRes = R.drawable.ic_plus,
@@ -206,20 +222,6 @@ private fun HomeContent(
             }
         }
         item { Spacer(Modifier.height(100.dp)) }
-    }
-}
-
-@Composable
-private fun AvatarInitial(name: String) {
-    Surface(
-        modifier = Modifier.size(50.dp),
-        shape = androidx.compose.foundation.shape.CircleShape,
-        color = SnapNavy,
-        contentColor = SnapWhite,
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Text(name.take(1).uppercase(), style = MaterialTheme.typography.titleLarge)
-        }
     }
 }
 
@@ -297,7 +299,7 @@ private fun TransactionItem(
 private fun HomeContentPreview() {
     APKBasicTheme {
         HomeContent(
-            userName = "SnapChi",
+            userProfile = UserProfile(id = "1", email = "test@example.com", displayName = "SnapChi"),
             monthLabel = "05/26",
             monthExpense = "2.450.000 đ",
             monthIncome = "8.000.000 đ",
@@ -313,6 +315,7 @@ private fun HomeContentPreview() {
             errorMessage = null,
             onRefresh = {},
             onOpenCapture = {},
+            onOpenProfile = {},
             onWalletSelected = {},
             onDaySelected = {},
         )
