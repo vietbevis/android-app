@@ -103,12 +103,17 @@ private fun MainAppShell(
 ) {
     var currentDestination by rememberSaveable { mutableStateOf(AppDestination.HOME) }
     var showCapture by rememberSaveable { mutableStateOf(false) }
+    var editingTransaction by remember { mutableStateOf<vn.vietbevis.apkbasic.domain.model.Transaction?>(null) }
 
-    if (showCapture) {
+    if (showCapture || editingTransaction != null) {
         CaptureModalContent(
             appContainer = appContainer,
             userProfile = userProfile,
-            onClose = { showCapture = false },
+            initialTransaction = editingTransaction,
+            onClose = { 
+                showCapture = false
+                editingTransaction = null
+            },
         )
         return
     }
@@ -128,11 +133,17 @@ private fun MainAppShell(
                 appContainer = appContainer,
                 userProfile = userProfile,
                 onOpenCapture = { showCapture = true },
-                onOpenProfile = { currentDestination = AppDestination.PROFILE }
+                onOpenProfile = { currentDestination = AppDestination.PROFILE },
+                onEditTransaction = { editingTransaction = it }
             )
             AppDestination.STATISTICS -> StatisticsScreen(
                 modifier = contentModifier,
                 appContainer = appContainer,
+            )
+            AppDestination.TRANSACTIONS -> vn.vietbevis.apkbasic.feature.transactions.TransactionsScreen(
+                modifier = contentModifier,
+                appContainer = appContainer,
+                onEditTransaction = { editingTransaction = it }
             )
             AppDestination.ACCOUNTS -> AccountsScreen(
                 modifier = contentModifier,
@@ -208,6 +219,7 @@ private fun SnapBottomBar(
 private fun CaptureModalContent(
     appContainer: AppContainer,
     userProfile: UserProfile,
+    initialTransaction: vn.vietbevis.apkbasic.domain.model.Transaction? = null,
     onClose: () -> Unit,
 ) {
     BackHandler(onBack = onClose)
@@ -219,7 +231,7 @@ private fun CaptureModalContent(
             .statusBarsPadding(),
     ) {
         SnapTopBar(
-            title = stringResource(R.string.destination_capture),
+            title = if (initialTransaction == null) stringResource(R.string.destination_capture) else "Sửa giao dịch",
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             navigationIcon = {
                 SnapIconButton(
@@ -235,6 +247,8 @@ private fun CaptureModalContent(
                 .weight(1f),
             appContainer = appContainer,
             userProfile = userProfile,
+            initialTransaction = initialTransaction,
+            onFinish = onClose
         )
     }
 }

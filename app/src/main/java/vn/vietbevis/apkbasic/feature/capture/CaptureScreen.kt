@@ -61,7 +61,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import coil3.compose.AsyncImage
 import vn.vietbevis.apkbasic.core.di.AppContainer
+import vn.vietbevis.apkbasic.domain.model.Transaction
 import vn.vietbevis.apkbasic.domain.model.TransactionType
 import vn.vietbevis.apkbasic.domain.model.UserProfile
 import vn.vietbevis.apkbasic.ui.components.SnapCard
@@ -84,17 +86,27 @@ fun CaptureScreen(
     modifier: Modifier = Modifier,
     appContainer: AppContainer,
     userProfile: UserProfile,
+    initialTransaction: Transaction? = null,
+    onFinish: () -> Unit = {},
 ) {
-    val viewModel = remember(userProfile.id) {
+    val viewModel = remember(userProfile.id, initialTransaction?.id) {
         CaptureViewModel(
             userProfile = userProfile,
             walletRepository = appContainer.walletRepository,
             categoryRepository = appContainer.categoryRepository,
             transactionRepository = appContainer.transactionRepository,
             photoRepository = appContainer.photoRepository,
+            initialTransaction = initialTransaction,
         )
     }
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            onFinish()
+        }
+    }
+
     CaptureContent(
         uiState = uiState,
         onPhotoCaptured = viewModel::onPhotoCaptured,
@@ -109,6 +121,7 @@ fun CaptureScreen(
         onResetOccurredAt = viewModel::resetOccurredAtToNow,
         onSave = viewModel::save,
         onSaveWithoutPhoto = viewModel::saveWithoutPhoto,
+        onDelete = viewModel::delete,
         modifier = modifier,
     )
 }
@@ -128,6 +141,7 @@ private fun CaptureContent(
     onResetOccurredAt: () -> Unit,
     onSave: () -> Unit,
     onSaveWithoutPhoto: () -> Unit,
+    onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -165,6 +179,7 @@ private fun CaptureContent(
             onResetOccurredAt = onResetOccurredAt,
             onSave = onSave,
             onSaveWithoutPhoto = onSaveWithoutPhoto,
+            onDelete = onDelete,
             modifier = modifier,
         )
     }
@@ -297,6 +312,7 @@ private fun CaptureForm(
     onResetOccurredAt: () -> Unit,
     onSave: () -> Unit,
     onSaveWithoutPhoto: () -> Unit,
+    onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -308,6 +324,7 @@ private fun CaptureForm(
     ) {
         PhotoCapturePanel(
             photoPath = uiState.selectedPhotoPath,
+            remotePhotoUrl = uiState.remotePhotoUrl,
             isSaving = uiState.isSaving,
             onPhotoCaptured = onPhotoCaptured,
             onPhotoCaptureFailed = onPhotoCaptureFailed,
@@ -371,12 +388,21 @@ private fun CaptureForm(
         }
         Spacer(Modifier.height(16.dp))
         SnapPrimaryButton(
-            text = if (uiState.isSaving) "Đang lưu..." else "Lưu giao dịch",
+            text = if (uiState.isSaving) "Đang lưu..." else if (uiState.transactionId == null) "Lưu giao dịch" else "Cập nhật",
             onClick = onSave,
             modifier = Modifier.fillMaxWidth(),
             enabled = !uiState.isSaving && uiState.wallets.isNotEmpty(),
             isLoading = uiState.isSaving,
         )
+        if (uiState.transactionId != null) {
+            OutlinedButton(
+                onClick = onDelete,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !uiState.isSaving,
+            ) {
+                Text("Xóa giao dịch", color = MaterialTheme.colorScheme.error)
+            }
+        }
         if (uiState.canSaveWithoutPhoto) {
             OutlinedButton(
                 onClick = onSaveWithoutPhoto,
@@ -392,6 +418,7 @@ private fun CaptureForm(
 @Composable
 private fun PhotoCapturePanel(
     photoPath: String?,
+    remotePhotoUrl: String?,
     isSaving: Boolean,
     onPhotoCaptured: (String) -> Unit,
     onPhotoCaptureFailed: () -> Unit,
@@ -410,7 +437,7 @@ private fun PhotoCapturePanel(
         color = Color.Black,
     ) {
         Box(Modifier.fillMaxSize()) {
-            if (photoPath == null) {
+            if (photoPath == null && remotePhotoUrl == null) {
                 CameraPreview(
                     lensFacing = lensFacing,
                     flashEnabled = flashEnabled,
@@ -476,7 +503,16 @@ private fun PhotoCapturePanel(
                     }
                 }
             } else {
-                CapturedPhotoPreview(photoPath = photoPath, modifier = Modifier.fillMaxSize())
+                if (photoPath != null) {
+                    CapturedPhotoPreview(photoPath = photoPath, modifier = Modifier.fillMaxSize())
+                } else if (remotePhotoUrl != null) {
+                    AsyncImage(
+                        model = remotePhotoUrl,
+                        contentDescription = "Ảnh giao dịch",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
                 Row(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -490,7 +526,7 @@ private fun PhotoCapturePanel(
                         modifier = Modifier.semantics { contentDescription = "Chụp lại ảnh giao dịch" },
                         enabled = !isSaving,
                     ) {
-                        Text("Chụp lại")
+                        Text(if (remotePhotoUrl != null) "Thay ảnh" else "Chụp lại")
                     }
                 }
             }

@@ -9,6 +9,7 @@ data class Transaction(
     val amount: Money,
     val note: String?,
     val occurredAtEpochMillis: Long,
+    val updatedAtEpochMillis: Long = 0,
     val photoPath: String?,
     val latitude: Double? = null,
     val longitude: Double? = null,

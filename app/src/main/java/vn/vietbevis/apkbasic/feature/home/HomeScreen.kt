@@ -1,5 +1,6 @@
 package vn.vietbevis.apkbasic.feature.home
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -70,6 +71,7 @@ fun HomeScreen(
     userProfile: UserProfile,
     onOpenCapture: () -> Unit,
     onOpenProfile: () -> Unit = {},
+    onEditTransaction: (Transaction) -> Unit = {},
 ) {
     val viewModel = remember {
         HomeViewModel(
@@ -99,6 +101,7 @@ fun HomeScreen(
         onRefresh = viewModel::refresh,
         onOpenCapture = onOpenCapture,
         onOpenProfile = onOpenProfile,
+        onEditTransaction = onEditTransaction,
         onWalletSelected = viewModel::selectWallet,
         onDaySelected = viewModel::selectDay,
     )
@@ -123,6 +126,7 @@ private fun HomeContent(
     onRefresh: () -> Unit,
     onOpenCapture: () -> Unit,
     onOpenProfile: () -> Unit,
+    onEditTransaction: (Transaction) -> Unit,
     onWalletSelected: (String?) -> Unit,
     onDaySelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
@@ -218,6 +222,7 @@ private fun HomeContent(
                     transaction = transaction,
                     wallet = wallets.firstOrNull { it.id == transaction.walletId },
                     category = categories.firstOrNull { it.id == transaction.categoryId },
+                    onClick = { onEditTransaction(transaction) }
                 )
             }
         }
@@ -281,16 +286,27 @@ private fun TransactionItem(
     transaction: Transaction,
     wallet: Wallet?,
     category: Category?,
+    onClick: () -> Unit,
 ) {
     val isExpense = transaction.type == TransactionType.EXPENSE
     val sign = if (isExpense) "-" else "+"
+    
+    // Construct the public URL for the transaction photo if it exists
+    val supabaseUrl = vn.vietbevis.apkbasic.BuildConfig.SUPABASE_URL.removeSuffix("/")
+    val imageUrl = transaction.photoPath?.let { path ->
+        // Handle cases where path might already be a URL or has leading slash
+        if (path.startsWith("http")) path else "$supabaseUrl/storage/v1/object/public/transaction-photos/${path.removePrefix("/")}"
+    }
+
     SnapListItem(
         title = category?.name ?: if (isExpense) "Khoản chi" else "Khoản thu",
         subtitle = listOfNotNull(wallet?.name, transaction.homeDateLabel(), transaction.note).joinToString(" · "),
         trailingTitle = "$sign${transaction.amount.formatVnd()}",
         trailingSubtitle = if (isExpense) "Chi tiêu" else "Thu nhập",
         iconText = category?.name ?: if (isExpense) "C" else "T",
+        imageUrl = imageUrl,
         iconContainerColor = if (isExpense) SnapYellow else SnapMint,
+        onClick = onClick,
     )
 }
 
@@ -316,6 +332,7 @@ private fun HomeContentPreview() {
             onRefresh = {},
             onOpenCapture = {},
             onOpenProfile = {},
+            onEditTransaction = {},
             onWalletSelected = {},
             onDaySelected = {},
         )

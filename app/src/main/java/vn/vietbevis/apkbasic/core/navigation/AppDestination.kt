@@ -12,5 +12,6 @@ enum class AppDestination(
     STATISTICS(R.string.destination_statistics, R.drawable.ic_chart),
     ACCOUNTS(R.string.destination_accounts, R.drawable.ic_wallet),
     BUDGETS(R.string.destination_budgets, R.drawable.ic_budget),
+    TRANSACTIONS(R.string.destination_transactions, R.drawable.ic_receipt),
     PROFILE(R.string.destination_profile, R.drawable.ic_profile),
 }

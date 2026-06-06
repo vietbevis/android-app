@@ -1,6 +1,8 @@
 package vn.vietbevis.apkbasic.feature.statistics
 
+import android.content.Intent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,16 +15,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import vn.vietbevis.apkbasic.core.di.AppContainer
@@ -52,6 +60,8 @@ fun StatisticsScreen(
         )
     }
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    var showExportMenu by remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = modifier
@@ -62,14 +72,64 @@ fun StatisticsScreen(
     ) {
         item {
             Column(Modifier.padding(top = 20.dp)) {
-                Text("Thống kê", style = MaterialTheme.typography.headlineMedium)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("Thống kê", style = MaterialTheme.typography.headlineMedium)
+                    Box {
+                        Button(onClick = { showExportMenu = true }) {
+                            Text("Xuất CSV")
+                        }
+                        DropdownMenu(
+                            expanded = showExportMenu,
+                            onDismissRequest = { showExportMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Thu nhập") },
+                                onClick = {
+                                    showExportMenu = false
+                                    performExport(context, viewModel, ExportType.INCOME, uiState.rangeLabel)
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Chi tiêu") },
+                                onClick = {
+                                    showExportMenu = false
+                                    performExport(context, viewModel, ExportType.EXPENSE, uiState.rangeLabel)
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Tất cả") },
+                                onClick = {
+                                    showExportMenu = false
+                                    performExport(context, viewModel, ExportType.ALL, uiState.rangeLabel)
+                                }
+                            )
+                        }
+                    }
+                }
+                
                 CapPillRow(Modifier.padding(top = 16.dp)) {
-                    CapStatusPill(text = "Tháng", selected = true)
-                    CapStatusPill(text = "Năm", selected = false)
-                    CapStatusPill(text = "Tất cả", selected = false)
+                    CapStatusPill(
+                        text = "Tháng", 
+                        selected = uiState.rangeType == StatisticsRangeType.MONTH,
+                        modifier = Modifier.clickable { viewModel.setRangeType(StatisticsRangeType.MONTH) }
+                    )
+                    CapStatusPill(
+                        text = "Năm", 
+                        selected = uiState.rangeType == StatisticsRangeType.YEAR,
+                        modifier = Modifier.clickable { viewModel.setRangeType(StatisticsRangeType.YEAR) }
+                    )
+                    CapStatusPill(
+                        text = "Tất cả", 
+                        selected = uiState.rangeType == StatisticsRangeType.ALL,
+                        modifier = Modifier.clickable { viewModel.setRangeType(StatisticsRangeType.ALL) }
+                    )
                 }
                 Text(
-                    text = "tháng ${uiState.monthRange.label}",
+                    text = uiState.rangeLabel,
                     modifier = Modifier.padding(top = 18.dp).align(Alignment.CenterHorizontally),
                     style = MaterialTheme.typography.titleLarge,
                 )
@@ -89,6 +149,28 @@ fun StatisticsScreen(
             }
         }
         item { Spacer(Modifier.height(88.dp)) }
+    }
+}
+
+private fun performExport(
+    context: android.content.Context,
+    viewModel: StatisticsViewModel,
+    type: ExportType,
+    label: String
+) {
+    val csv = viewModel.exportCsv(type)
+    if (csv != null) {
+        val typeLabel = when (type) {
+            ExportType.INCOME -> "Thu nhập"
+            ExportType.EXPENSE -> "Chi tiêu"
+            ExportType.ALL -> "Tổng hợp"
+        }
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            this.type = "text/csv"
+            putExtra(Intent.EXTRA_SUBJECT, "Báo cáo $typeLabel - $label")
+            putExtra(Intent.EXTRA_TEXT, csv)
+        }
+        context.startActivity(Intent.createChooser(intent, "Xuất dữ liệu CSV"))
     }
 }
 

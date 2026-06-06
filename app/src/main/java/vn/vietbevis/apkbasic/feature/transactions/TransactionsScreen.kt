@@ -1,5 +1,6 @@
 package vn.vietbevis.apkbasic.feature.transactions
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,7 +15,6 @@ import androidx.compose.foundation.background
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -44,6 +44,7 @@ import java.util.Locale
 fun TransactionsScreen(
     modifier: Modifier = Modifier,
     appContainer: AppContainer,
+    onEditTransaction: (Transaction) -> Unit = {},
 ) {
     val viewModel = remember {
         TransactionsViewModel(
@@ -54,6 +55,8 @@ fun TransactionsScreen(
     }
     val uiState by viewModel.uiState.collectAsState()
     var pendingDelete by remember { mutableStateOf<Transaction?>(null) }
+
+    Log.v("TRANSACTIONVIEW", uiState.transactions.toString()?: "NULL ROI");
 
     Column(
         modifier = modifier
@@ -81,14 +84,26 @@ fun TransactionsScreen(
             else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(uiState.transactions, key = { it.id }) { transaction ->
                     val walletName = uiState.wallets.firstOrNull { it.id == transaction.walletId }?.name ?: "Ví không rõ"
-                    val categoryName = uiState.categories.firstOrNull { it.id == transaction.categoryId }?.name ?: "Khác"
-                    TransactionRow(
-                        transaction = transaction,
-                        walletName = walletName,
-                        categoryName = categoryName,
-                        onDelete = { pendingDelete = transaction },
+                    val category = uiState.categories.firstOrNull { it.id == transaction.categoryId }
+                    val isExpense = transaction.type == TransactionType.EXPENSE
+                    val sign = if (isExpense) "-" else "+"
+
+                    val supabaseUrl = vn.vietbevis.apkbasic.BuildConfig.SUPABASE_URL.removeSuffix("/")
+                    val imageUrl = transaction.photoPath?.let { path ->
+                        if (path.startsWith("http")) path else "$supabaseUrl/storage/v1/object/public/transaction-photos/${path.removePrefix("/")}"
+                    }
+
+                    SnapListItem(
+                        title = category?.name ?: if (isExpense) "Khoản chi" else "Khoản thu",
+                        subtitle = listOfNotNull(walletName, transaction.note).joinToString(" · "),
+                        trailingTitle = "$sign${transaction.amount.formatVnd()}",
+                        trailingSubtitle = if (isExpense) "Sửa" else "Thu nhập",
+                        iconText = category?.name ?: if (isExpense) "C" else "T",
+                        imageUrl = imageUrl,
+                        iconContainerColor = if (isExpense) vn.vietbevis.apkbasic.ui.theme.SnapYellow else vn.vietbevis.apkbasic.ui.theme.SnapMint,
+                        onClick = { onEditTransaction(transaction) }
                     )
-                    HorizontalDivider()
+                    Spacer(Modifier.height(8.dp))
                 }
             }
         }
@@ -121,43 +136,6 @@ fun TransactionsScreen(
 @Composable
 private fun EmptyTransactions() {
     Text("Chưa có giao dịch trong tháng này.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-}
-
-@Composable
-private fun TransactionRow(
-    transaction: Transaction,
-    walletName: String,
-    categoryName: String,
-    onDelete: () -> Unit,
-) {
-    val sign = if (transaction.type == TransactionType.EXPENSE) "-" else "+"
-    val date = remember(transaction.occurredAtEpochMillis) {
-        SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.forLanguageTag("vi-VN")).format(Date(transaction.occurredAtEpochMillis))
-    }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(categoryName, style = MaterialTheme.typography.titleSmall)
-            Text(
-                listOfNotNull(walletName, date, transaction.note).joinToString(" • "),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
-            )
-            if (transaction.photoPath != null) {
-                Text("Có ảnh", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodySmall)
-            }
-        }
-        Column(horizontalAlignment = Alignment.End) {
-            Text("$sign${transaction.amount.formatVnd()}", style = MaterialTheme.typography.titleSmall)
-            TextButton(onClick = onDelete) {
-                Text("Xóa")
-            }
-        }
-    }
 }
 
 @Preview(showBackground = true, name = "Transactions Screen")

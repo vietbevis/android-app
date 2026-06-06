@@ -22,11 +22,13 @@ import vn.vietbevis.apkbasic.domain.validation.TransactionValidator
 import java.util.UUID
 
 data class CaptureUiState(
+    val transactionId: String? = null,
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
     val wallets: List<Wallet> = emptyList(),
     val categories: List<Category> = emptyList(),
     val selectedPhotoPath: String? = null,
+    val remotePhotoUrl: String? = null,
     val amountInput: String = "",
     val calculatorState: CalculatorState = CalculatorState(),
     val type: TransactionType = TransactionType.EXPENSE,
@@ -37,6 +39,7 @@ data class CaptureUiState(
     val errorMessage: String? = null,
     val infoMessage: String? = null,
     val canSaveWithoutPhoto: Boolean = false,
+    val isSuccess: Boolean = false,
 )
 
 class CaptureViewModel(
@@ -45,8 +48,24 @@ class CaptureViewModel(
     private val categoryRepository: CategoryRepository,
     private val transactionRepository: TransactionRepository,
     private val photoRepository: PhotoRepository,
+    private val initialTransaction: Transaction? = null,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(CaptureUiState())
+    private val _uiState = MutableStateFlow(
+        CaptureUiState(
+            transactionId = initialTransaction?.id,
+            amountInput = initialTransaction?.amount?.minorUnits?.toString() ?: "",
+            calculatorState = CalculatorState(display = initialTransaction?.amount?.minorUnits?.toString() ?: "0"),
+            type = initialTransaction?.type ?: TransactionType.EXPENSE,
+            selectedWalletId = initialTransaction?.walletId,
+            selectedCategoryId = initialTransaction?.categoryId,
+            noteInput = initialTransaction?.note ?: "",
+            occurredAtEpochMillis = initialTransaction?.occurredAtEpochMillis ?: System.currentTimeMillis(),
+            remotePhotoUrl = initialTransaction?.photoPath?.let { path ->
+                val supabaseUrl = vn.vietbevis.apkbasic.BuildConfig.SUPABASE_URL.removeSuffix("/")
+                "$supabaseUrl/storage/v1/object/public/transaction-photos/${path.removePrefix("/")}"
+            }
+        )
+    )
     val uiState: StateFlow<CaptureUiState> = _uiState.asStateFlow()
 
     init {
@@ -67,15 +86,16 @@ class CaptureViewModel(
                 _uiState.update { it.copy(isLoading = false, errorMessage = error.userMessage()) }
                 return@launch
             }
-            val type = _uiState.value.type
-            _uiState.update {
-                it.copy(
+            
+            _uiState.update { state ->
+                val type = state.type
+                state.copy(
                     isLoading = false,
                     wallets = wallets,
                     categories = categories,
-                    selectedWalletId = it.selectedWalletId ?: wallets.firstOrNull()?.id,
-                    selectedCategoryId = it.selectedCategoryId
-                        ?: categories.firstOrNull { category -> category.transactionType == type }?.id,
+                    selectedWalletId = state.selectedWalletId ?: wallets.firstOrNull()?.id,
+                    selectedCategoryId = state.selectedCategoryId
+                        ?: categories.firstOrNull { it.transactionType == type }?.id,
                     errorMessage = null,
                 )
             }
@@ -84,7 +104,7 @@ class CaptureViewModel(
 
     fun onPhotoCaptured(path: String) {
         _uiState.update {
-            it.copy(selectedPhotoPath = path, infoMessage = null, errorMessage = null, canSaveWithoutPhoto = false)
+            it.copy(selectedPhotoPath = path, remotePhotoUrl = null, infoMessage = null, errorMessage = null, canSaveWithoutPhoto = false)
         }
     }
 
@@ -96,7 +116,7 @@ class CaptureViewModel(
 
     fun retakePhoto() {
         _uiState.update {
-            it.copy(selectedPhotoPath = null, infoMessage = null, errorMessage = null, canSaveWithoutPhoto = false)
+            it.copy(selectedPhotoPath = null, remotePhotoUrl = null, infoMessage = null, errorMessage = null, canSaveWithoutPhoto = false)
         }
     }
 
@@ -144,6 +164,20 @@ class CaptureViewModel(
         _uiState.update { it.copy(occurredAtEpochMillis = System.currentTimeMillis()) }
     }
 
+    fun delete() {
+        val transactionId = _uiState.value.transactionId ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSaving = true) }
+            transactionRepository.deleteTransaction(transactionId)
+                .onSuccess {
+                    _uiState.update { it.copy(isSaving = false, isSuccess = true) }
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(isSaving = false, errorMessage = error.userMessage()) }
+                }
+        }
+    }
+
     fun save() {
         saveInternal(allowPhotoSkip = false)
     }
@@ -166,7 +200,7 @@ class CaptureViewModel(
             return
         }
 
-        val transactionId = UUID.randomUUID().toString()
+        val transactionId = state.transactionId ?: UUID.randomUUID().toString()
         val baseTransaction = Transaction(
             id = transactionId,
             userId = userProfile.id,
@@ -176,8 +210,9 @@ class CaptureViewModel(
             amount = Money.vnd(amount),
             note = state.noteInput.trim().ifBlank { null },
             occurredAtEpochMillis = state.occurredAtEpochMillis,
-            photoPath = null,
+            photoPath = initialTransaction?.photoPath, // Preserved unless replaced
         )
+        
         val validationErrors = TransactionValidator.validate(baseTransaction, wallet, category)
         if (validationErrors.isNotEmpty()) {
             _uiState.update { it.copy(errorMessage = "Thông tin giao dịch chưa hợp lệ.") }
@@ -186,14 +221,16 @@ class CaptureViewModel(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, errorMessage = null, infoMessage = null) }
-            var uploadedPhotoPath: String? = null
+            var uploadedPhotoPath: String? = initialTransaction?.photoPath
 
             if (!allowPhotoSkip && state.selectedPhotoPath != null) {
-                uploadedPhotoPath = photoRepository.uploadTransactionPhoto(
+                photoRepository.uploadTransactionPhoto(
                     userId = userProfile.id,
                     transactionId = transactionId,
                     localPath = state.selectedPhotoPath,
-                ).getOrElse { error ->
+                ).onSuccess {
+                    uploadedPhotoPath = it
+                }.onFailure { error ->
                     _uiState.update {
                         it.copy(
                             isSaving = false,
@@ -203,26 +240,25 @@ class CaptureViewModel(
                     }
                     return@launch
                 }
+            } else if (allowPhotoSkip) {
+                uploadedPhotoPath = null
             }
 
             val transaction = baseTransaction.copy(photoPath = uploadedPhotoPath)
-            transactionRepository.createTransaction(transaction)
-                .onSuccess {
-                    _uiState.value = CaptureUiState(
-                        isLoading = false,
-                        wallets = state.wallets,
-                        categories = state.categories,
-                        selectedWalletId = state.selectedWalletId,
-                        selectedCategoryId = state.selectedCategoryId,
-                        infoMessage = "Đã lưu giao dịch.",
-                    )
+            
+            val result = if (state.transactionId == null) {
+                transactionRepository.createTransaction(transaction)
+            } else {
+                transactionRepository.updateTransaction(transaction)
+            }
+
+            result.onSuccess {
+                _uiState.update { it.copy(isSaving = false, isSuccess = true, infoMessage = "Đã lưu giao dịch.") }
+            }.onFailure { error ->
+                _uiState.update {
+                    it.copy(isSaving = false, errorMessage = error.userMessage())
                 }
-                .onFailure { error ->
-                    uploadedPhotoPath?.let { photoRepository.deleteTransactionPhoto(it) }
-                    _uiState.update {
-                        it.copy(isSaving = false, errorMessage = error.userMessage())
-                    }
-                }
+            }
         }
     }
 }

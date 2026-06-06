@@ -21,9 +21,10 @@ data class TransactionDto(
     @SerialName("latitude") val latitude: Double? = null,
     @SerialName("longitude") val longitude: Double? = null,
     @SerialName("location_label") val locationLabel: String? = null,
+    @SerialName("updated_at") val updatedAt: String? = null,
 )
 
-fun TransactionDto.toDomain(occurredAtEpochMillis: Long): Transaction = Transaction(
+fun TransactionDto.toDomain(occurredAtEpochMillis: Long, updatedAtEpochMillis: Long): Transaction = Transaction(
     id = id,
     userId = userId,
     walletId = walletId,
@@ -32,6 +33,7 @@ fun TransactionDto.toDomain(occurredAtEpochMillis: Long): Transaction = Transact
     amount = Money.vnd(amount.toLong()),
     note = note,
     occurredAtEpochMillis = occurredAtEpochMillis,
+    updatedAtEpochMillis = updatedAtEpochMillis,
     photoPath = photoPath,
     latitude = latitude,
     longitude = longitude,

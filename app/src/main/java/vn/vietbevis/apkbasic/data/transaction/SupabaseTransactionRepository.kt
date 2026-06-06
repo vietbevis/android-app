@@ -24,7 +24,12 @@ class SupabaseTransactionRepository(
                 order("occurred_at", Order.DESCENDING)
             }
             .decodeList<TransactionDto>()
-            .map { it.toDomain(DateCodecs.isoToEpochMillis(it.occurredAt)) }
+            .map {
+                it.toDomain(
+                    occurredAtEpochMillis = DateCodecs.isoToEpochMillis(it.occurredAt),
+                    updatedAtEpochMillis = it.updatedAt?.let { iso -> DateCodecs.isoToEpochMillis(iso) } ?: 0L
+                )
+            }
     }
 
     override suspend fun getTransaction(transactionId: String): Result<Transaction> = appResult {
@@ -33,7 +38,12 @@ class SupabaseTransactionRepository(
                 filter { eq("id", transactionId) }
             }
             .decodeSingle<TransactionDto>()
-            .let { it.toDomain(DateCodecs.isoToEpochMillis(it.occurredAt)) }
+            .let {
+                it.toDomain(
+                    occurredAtEpochMillis = DateCodecs.isoToEpochMillis(it.occurredAt),
+                    updatedAtEpochMillis = it.updatedAt?.let { iso -> DateCodecs.isoToEpochMillis(iso) } ?: 0L
+                )
+            }
     }
 
     override suspend fun createTransaction(transaction: Transaction): Result<Transaction> = appResult {
@@ -64,5 +74,10 @@ class SupabaseTransactionRepository(
                 filter { eq("id", transactionId) }
             }
             .decodeSingle<TransactionDto>()
-            .let { it.toDomain(DateCodecs.isoToEpochMillis(it.occurredAt)) }
+            .let {
+                it.toDomain(
+                    occurredAtEpochMillis = DateCodecs.isoToEpochMillis(it.occurredAt),
+                    updatedAtEpochMillis = it.updatedAt?.let { iso -> DateCodecs.isoToEpochMillis(iso) } ?: 0L
+                )
+            }
 }
