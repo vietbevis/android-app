@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -29,7 +30,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -41,6 +44,7 @@ import vn.vietbevis.apkbasic.domain.model.Transaction
 import vn.vietbevis.apkbasic.domain.model.TransactionType
 import vn.vietbevis.apkbasic.domain.model.UserProfile
 import vn.vietbevis.apkbasic.domain.model.Wallet
+import vn.vietbevis.apkbasic.domain.reporting.BudgetInsights
 import vn.vietbevis.apkbasic.ui.components.SnapAvatar
 import vn.vietbevis.apkbasic.ui.components.SnapCard
 import vn.vietbevis.apkbasic.ui.components.SnapColoredBanner
@@ -72,12 +76,15 @@ fun HomeScreen(
     onOpenCapture: () -> Unit,
     onOpenProfile: () -> Unit = {},
     onEditTransaction: (Transaction) -> Unit = {},
+    onOpenBudgetDetail: () -> Unit = {},
 ) {
-    val viewModel = remember {
+    val viewModel = remember(userProfile.id) {
         HomeViewModel(
+            userProfile = userProfile,
             walletRepository = appContainer.walletRepository,
             categoryRepository = appContainer.categoryRepository,
             transactionRepository = appContainer.transactionRepository,
+            budgetRepository = appContainer.budgetRepository,
         )
     }
     val uiState by viewModel.uiState.collectAsState()
@@ -90,6 +97,7 @@ fun HomeScreen(
         monthIncome = uiState.monthIncome.formatVnd(),
         dayExpense = uiState.dayExpense.formatVnd(),
         dayIncome = uiState.dayIncome.formatVnd(),
+        budgetInsights = uiState.budgetInsights,
         selectedDay = uiState.selectedDayOfMonth,
         wallets = uiState.wallets,
         categories = uiState.categories,
@@ -102,6 +110,7 @@ fun HomeScreen(
         onOpenCapture = onOpenCapture,
         onOpenProfile = onOpenProfile,
         onEditTransaction = onEditTransaction,
+        onOpenBudgetDetail = onOpenBudgetDetail,
         onWalletSelected = viewModel::selectWallet,
         onDaySelected = viewModel::selectDay,
     )
@@ -115,6 +124,7 @@ private fun HomeContent(
     monthIncome: String,
     dayExpense: String,
     dayIncome: String,
+    budgetInsights: BudgetInsights?,
     selectedDay: Int,
     wallets: List<Wallet>,
     categories: List<Category>,
@@ -129,6 +139,7 @@ private fun HomeContent(
     onEditTransaction: (Transaction) -> Unit,
     onWalletSelected: (String?) -> Unit,
     onDaySelected: (Int) -> Unit,
+    onOpenBudgetDetail: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val userName = userProfile.displayName?.takeIf { it.isNotBlank() } ?: stringResource(R.string.app_name)
@@ -169,6 +180,11 @@ private fun HomeContent(
                 amount = monthExpense,
                 meta = monthLabel,
             )
+        }
+        budgetInsights?.let { insights ->
+            item {
+                BudgetInsightsSection(insights = insights, onClick = onOpenBudgetDetail)
+            }
         }
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -230,6 +246,73 @@ private fun HomeContent(
     }
 }
 
+@Composable
+private fun BudgetInsightsSection(insights: BudgetInsights, onClick: () -> Unit) {
+    SnapCard(
+        modifier = Modifier.fillMaxWidth().clickable { onClick() },
+        containerColor = if (insights.isExceeded) SnapCoral.copy(alpha = 0.1f) else SnapWhite,
+        borderColor = if (insights.isExceeded) SnapCoral else Color.Transparent
+    ) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (insights.isExceeded) "🚨 Vượt hạn mức!" else "💡 Gợi ý chi tiêu",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (insights.isExceeded) SnapCoral else SnapNavy
+                )
+                Text(
+                    text = "${insights.percentSpent}%",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = SnapSlate
+                )
+            }
+
+            if (insights.isExceeded) {
+                Text(
+                    text = "Bạn đã chi quá hạn mức tháng này ${insights.exceededAmount.formatVnd()}!",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = SnapCoral
+                )
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    InsightRow(
+                        label = "Gợi ý tuần này:",
+                        value = "Tối đa ${insights.suggestedWeekly.formatVnd()}",
+                        iconRes = R.drawable.ic_chart
+                    )
+                    InsightRow(
+                        label = "Hạn mức hôm nay:",
+                        value = insights.suggestedDaily.formatVnd(),
+                        iconRes = R.drawable.ic_budget
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun InsightRow(label: String, value: String, iconRes: Int) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+            tint = SnapBlue
+        )
+        Text(label, style = MaterialTheme.typography.bodySmall, color = SnapSlate, modifier = Modifier.weight(1f))
+        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = SnapNavy)
+    }
+}
 @Composable
 private fun MiniMetric(title: String, value: String, color: Color, modifier: Modifier = Modifier) {
     SnapColoredBanner(modifier = modifier, containerColor = color) {
@@ -327,6 +410,7 @@ private fun HomeContentPreview() {
             transactions = emptyList(),
             calendarDays = (1..7).map { HomeCalendarDay(it, it == 3, Money.vnd(0), Money.vnd(0), 0) },
             selectedWalletId = null,
+            budgetInsights = null,
             isLoading = false,
             errorMessage = null,
             onRefresh = {},
@@ -335,6 +419,7 @@ private fun HomeContentPreview() {
             onEditTransaction = {},
             onWalletSelected = {},
             onDaySelected = {},
+            onOpenBudgetDetail = {},
         )
     }
 }

@@ -14,7 +14,11 @@ import vn.vietbevis.apkbasic.domain.model.Category
 import vn.vietbevis.apkbasic.domain.model.Money
 import vn.vietbevis.apkbasic.domain.model.Transaction
 import vn.vietbevis.apkbasic.domain.model.TransactionType
+import vn.vietbevis.apkbasic.domain.model.UserProfile
 import vn.vietbevis.apkbasic.domain.model.Wallet
+import vn.vietbevis.apkbasic.domain.reporting.BudgetInsights
+import vn.vietbevis.apkbasic.domain.reporting.BudgetInsightsCalculator
+import vn.vietbevis.apkbasic.domain.repository.BudgetRepository
 import vn.vietbevis.apkbasic.domain.repository.CategoryRepository
 import vn.vietbevis.apkbasic.domain.repository.TransactionRepository
 import vn.vietbevis.apkbasic.domain.repository.WalletRepository
@@ -36,6 +40,7 @@ data class HomeUiState(
     val monthIncome: Money = Money.vnd(0),
     val dayExpense: Money = Money.vnd(0),
     val dayIncome: Money = Money.vnd(0),
+    val budgetInsights: BudgetInsights? = null,
     val errorMessage: String? = null,
 )
 
@@ -48,9 +53,11 @@ data class HomeCalendarDay(
 )
 
 class HomeViewModel(
+    private val userProfile: UserProfile,
     private val walletRepository: WalletRepository,
     private val categoryRepository: CategoryRepository,
     private val transactionRepository: TransactionRepository,
+    private val budgetRepository: BudgetRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -89,6 +96,29 @@ class HomeViewModel(
                         transactions = transactions,
                     ),
                 )
+            }
+            loadBudgetInsights()
+        }
+    }
+
+    private suspend fun loadBudgetInsights() {
+        val calendar = Calendar.getInstance().apply { timeInMillis = _uiState.value.monthRange.startEpochMillis }
+        val year = calendar.get(Calendar.YEAR)
+        val month = calendar.get(Calendar.MONTH) + 1
+        val monthStr = String.format(Locale.US, "%04d-%02d-01", year, month)
+        val budgetResult = budgetRepository.getMonthlyBudget(userProfile.id, monthStr)
+        
+        budgetResult.onSuccess { budget ->
+            if (budget != null) {
+                _uiState.update { state ->
+                    val insights = BudgetInsightsCalculator.calculate(
+                        monthlyLimit = budget.amount,
+                        totalSpent = state.monthExpense
+                    )
+                    state.copy(budgetInsights = insights)
+                }
+            } else {
+                _uiState.update { it.copy(budgetInsights = null) }
             }
         }
     }

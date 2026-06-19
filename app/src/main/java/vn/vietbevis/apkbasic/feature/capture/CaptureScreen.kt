@@ -30,15 +30,19 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -53,6 +57,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -62,6 +67,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil3.compose.AsyncImage
+import vn.vietbevis.apkbasic.R
 import vn.vietbevis.apkbasic.core.di.AppContainer
 import vn.vietbevis.apkbasic.domain.model.Transaction
 import vn.vietbevis.apkbasic.domain.model.TransactionType
@@ -96,6 +102,7 @@ fun CaptureScreen(
             categoryRepository = appContainer.categoryRepository,
             transactionRepository = appContainer.transactionRepository,
             photoRepository = appContainer.photoRepository,
+            budgetMonitor = appContainer.budgetMonitor,
             initialTransaction = initialTransaction,
         )
     }
@@ -122,6 +129,9 @@ fun CaptureScreen(
         onSave = viewModel::save,
         onSaveWithoutPhoto = viewModel::saveWithoutPhoto,
         onDelete = viewModel::delete,
+        onShowAddCategory = { viewModel.showAddCategory(true) },
+        onAddCategory = viewModel::createCategory,
+        onDismissAddCategory = { viewModel.showAddCategory(false) },
         modifier = modifier,
     )
 }
@@ -142,6 +152,9 @@ private fun CaptureContent(
     onSave: () -> Unit,
     onSaveWithoutPhoto: () -> Unit,
     onDelete: () -> Unit,
+    onShowAddCategory: () -> Unit,
+    onAddCategory: (String) -> Unit,
+    onDismissAddCategory: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -152,9 +165,17 @@ private fun CaptureContent(
         )
     }
     val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-    ) { granted ->
-        hasCameraPermission = granted
+        contract = ActivityResultContracts.RequestMultiplePermissions(),
+    ) { permissions ->
+        hasCameraPermission = permissions[Manifest.permission.CAMERA] ?: hasCameraPermission
+    }
+
+    LaunchedEffect(Unit) {
+        val permissions = mutableListOf(Manifest.permission.CAMERA)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        permissionLauncher.launch(permissions.toTypedArray())
     }
 
     when {
@@ -163,7 +184,13 @@ private fun CaptureContent(
         }
         !hasCameraPermission -> PermissionRationale(
             modifier = modifier,
-            onRequestPermission = { permissionLauncher.launch(Manifest.permission.CAMERA) },
+            onRequestPermission = {
+                val permissions = mutableListOf(Manifest.permission.CAMERA)
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                    permissions.add(Manifest.permission.POST_NOTIFICATIONS)
+                }
+                permissionLauncher.launch(permissions.toTypedArray())
+            },
         )
         else -> CaptureForm(
             uiState = uiState,
@@ -180,7 +207,16 @@ private fun CaptureContent(
             onSave = onSave,
             onSaveWithoutPhoto = onSaveWithoutPhoto,
             onDelete = onDelete,
+            onShowAddCategory = onShowAddCategory,
             modifier = modifier,
+        )
+    }
+
+    if (uiState.isAddingCategory) {
+        AddCategoryDialog(
+            type = uiState.type,
+            onConfirm = onAddCategory,
+            onDismiss = onDismissAddCategory
         )
     }
 }
@@ -313,6 +349,7 @@ private fun CaptureForm(
     onSave: () -> Unit,
     onSaveWithoutPhoto: () -> Unit,
     onDelete: () -> Unit,
+    onShowAddCategory: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -362,6 +399,8 @@ private fun CaptureForm(
             enabled = !uiState.isSaving,
             onSelected = onCategorySelected,
             emptyMessage = "Chưa có danh mục cho loại giao dịch này.",
+            onAction = onShowAddCategory,
+            actionIcon = R.drawable.ic_plus
         )
         Spacer(Modifier.height(12.dp))
         OutlinedTextField(
@@ -639,8 +678,26 @@ private fun SelectionGroup(
     enabled: Boolean,
     onSelected: (String) -> Unit,
     emptyMessage: String,
+    onAction: (() -> Unit)? = null,
+    actionIcon: Int? = null,
 ) {
-    Text(title, style = MaterialTheme.typography.titleSmall)
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(title, style = MaterialTheme.typography.titleSmall)
+        if (onAction != null && actionIcon != null) {
+            IconButton(onClick = onAction, enabled = enabled, modifier = Modifier.size(24.dp)) {
+                Icon(
+                    painter = painterResource(actionIcon),
+                    contentDescription = "Thêm mới",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
     if (options.isEmpty()) {
         Text(emptyMessage, color = MaterialTheme.colorScheme.onSurfaceVariant)
         return
@@ -659,6 +716,41 @@ private fun SelectionGroup(
             )
         }
     }
+}
+
+@Composable
+private fun AddCategoryDialog(
+    type: TransactionType,
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Thêm danh mục ${if (type == TransactionType.EXPENSE) "chi" else "thu"}") },
+        text = {
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Tên danh mục") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(name) },
+                enabled = name.isNotBlank()
+            ) {
+                Text("Thêm")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Hủy")
+            }
+        }
+    )
 }
 
 @Composable

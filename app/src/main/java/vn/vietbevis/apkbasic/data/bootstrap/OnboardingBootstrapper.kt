@@ -91,11 +91,11 @@ class OnboardingBootstrapper(
         Category(
             id = UUID.randomUUID().toString(),
             userId = userId,
-            name = "Thu khác",
-            transactionType = TransactionType.INCOME,
+            name = "Chi khác",
+            transactionType = TransactionType.EXPENSE,
             icon = "add_card",
             color = "#00A3A3",
             isDefault = true,
         ),
-    )
+        )
 }

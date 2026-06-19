@@ -1,6 +1,8 @@
 package vn.vietbevis.apkbasic.core.di
 
+import android.content.Context
 import io.github.jan.supabase.SupabaseClient
+import vn.vietbevis.apkbasic.core.notification.BudgetNotificationHelper
 import vn.vietbevis.apkbasic.core.supabase.SupabaseProvider
 import vn.vietbevis.apkbasic.data.auth.SupabaseAuthRepository
 import vn.vietbevis.apkbasic.data.bootstrap.OnboardingBootstrapper
@@ -27,8 +29,10 @@ import vn.vietbevis.apkbasic.domain.repository.TransactionRepository
 import vn.vietbevis.apkbasic.domain.repository.TransferRepository
 import vn.vietbevis.apkbasic.domain.repository.UserPreferenceRepository
 import vn.vietbevis.apkbasic.domain.repository.WalletRepository
+import vn.vietbevis.apkbasic.domain.service.BudgetMonitor
 
 class AppContainer(
+    val context: Context,
     val supabaseClient: SupabaseClient = SupabaseProvider.createClient(),
 ) {
     val authRepository: AuthRepository = SupabaseAuthRepository(supabaseClient)
@@ -43,6 +47,10 @@ class AppContainer(
     val recurringTransactionRepository: RecurringTransactionRepository = SupabaseRecurringTransactionRepository(supabaseClient)
     val userPreferenceRepository: UserPreferenceRepository = SupabaseUserPreferenceRepository(supabaseClient)
     val sharingRepository: SharingRepository = SupabaseSharingRepository(supabaseClient)
+    
+    val budgetNotificationHelper = BudgetNotificationHelper(context)
+    val budgetMonitor = BudgetMonitor(budgetRepository, budgetNotificationHelper)
+
     val onboardingBootstrapper = OnboardingBootstrapper(
         supabaseClient = supabaseClient,
         walletRepository = walletRepository,

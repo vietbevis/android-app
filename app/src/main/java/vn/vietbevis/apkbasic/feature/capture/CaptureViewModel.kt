@@ -18,6 +18,7 @@ import vn.vietbevis.apkbasic.domain.repository.CategoryRepository
 import vn.vietbevis.apkbasic.domain.repository.PhotoRepository
 import vn.vietbevis.apkbasic.domain.repository.TransactionRepository
 import vn.vietbevis.apkbasic.domain.repository.WalletRepository
+import vn.vietbevis.apkbasic.domain.service.BudgetMonitor
 import vn.vietbevis.apkbasic.domain.validation.TransactionValidator
 import java.util.UUID
 
@@ -40,6 +41,7 @@ data class CaptureUiState(
     val infoMessage: String? = null,
     val canSaveWithoutPhoto: Boolean = false,
     val isSuccess: Boolean = false,
+    val isAddingCategory: Boolean = false,
 )
 
 class CaptureViewModel(
@@ -48,6 +50,7 @@ class CaptureViewModel(
     private val categoryRepository: CategoryRepository,
     private val transactionRepository: TransactionRepository,
     private val photoRepository: PhotoRepository,
+    private val budgetMonitor: BudgetMonitor,
     private val initialTransaction: Transaction? = null,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(
@@ -160,6 +163,38 @@ class CaptureViewModel(
         _uiState.update { it.copy(noteInput = value, errorMessage = null) }
     }
 
+    fun showAddCategory(show: Boolean) {
+        _uiState.update { it.copy(isAddingCategory = show) }
+    }
+
+    fun createCategory(name: String) {
+        if (name.isBlank()) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSaving = true, isAddingCategory = false) }
+            val category = Category(
+                id = UUID.randomUUID().toString(),
+                userId = userProfile.id,
+                name = name.trim(),
+                transactionType = _uiState.value.type,
+                icon = "ic_budget",
+                color = "#435875"
+            )
+            categoryRepository.createCategory(category)
+                .onSuccess { newCat ->
+                    _uiState.update { state ->
+                        state.copy(
+                            isSaving = false,
+                            categories = state.categories + newCat,
+                            selectedCategoryId = newCat.id
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(isSaving = false, errorMessage = error.userMessage()) }
+                }
+        }
+    }
+
     fun resetOccurredAtToNow() {
         _uiState.update { it.copy(occurredAtEpochMillis = System.currentTimeMillis()) }
     }
@@ -252,8 +287,11 @@ class CaptureViewModel(
                 transactionRepository.updateTransaction(transaction)
             }
 
-            result.onSuccess {
+            result.onSuccess { savedTransaction ->
                 _uiState.update { it.copy(isSaving = false, isSuccess = true, infoMessage = "Đã lưu giao dịch.") }
+                viewModelScope.launch {
+                    budgetMonitor.checkBudgetsAfterTransaction(savedTransaction)
+                }
             }.onFailure { error ->
                 _uiState.update {
                     it.copy(isSaving = false, errorMessage = error.userMessage())

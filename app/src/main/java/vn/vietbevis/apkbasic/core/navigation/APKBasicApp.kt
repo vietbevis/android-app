@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -34,6 +33,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import vn.vietbevis.apkbasic.R
 import vn.vietbevis.apkbasic.core.di.AppContainer
 import vn.vietbevis.apkbasic.domain.model.UserProfile
@@ -54,7 +54,9 @@ import vn.vietbevis.apkbasic.ui.theme.SnapNavy
 import vn.vietbevis.apkbasic.ui.theme.SnapWhite
 
 @Composable
-fun APKBasicApp(appContainer: AppContainer = remember { AppContainer() }) {
+fun APKBasicApp() {
+    val context = LocalContext.current
+    val appContainer = remember { AppContainer(context) }
     val authViewModel = remember {
         AuthViewModel(
             authRepository = appContainer.authRepository,
@@ -134,7 +136,8 @@ private fun MainAppShell(
                 userProfile = userProfile,
                 onOpenCapture = { showCapture = true },
                 onOpenProfile = { currentDestination = AppDestination.PROFILE },
-                onEditTransaction = { editingTransaction = it }
+                onEditTransaction = { editingTransaction = it },
+                onOpenBudgetDetail = { currentDestination = AppDestination.BUDGETS }
             )
             AppDestination.STATISTICS -> StatisticsScreen(
                 modifier = contentModifier,
