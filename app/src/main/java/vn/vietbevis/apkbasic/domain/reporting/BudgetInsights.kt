@@ -33,7 +33,12 @@ object BudgetInsightsCalculator {
         val daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
         val daysRemaining = (daysInMonth - dayOfMonth + 1).coerceAtLeast(1)
         
-        val weeksRemaining = (daysRemaining / 7.0).coerceAtLeast(1.0)
+        val dailyBudget = remaining / daysRemaining
+        
+        val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+        val daysLeftInWeek = if (dayOfWeek == Calendar.SUNDAY) 1 else 7 - (dayOfWeek - 2)
+        val daysToAccountFor = minOf(daysLeftInWeek, daysRemaining)
+        val weeklyBudget = dailyBudget * daysToAccountFor
         
         return BudgetInsights(
             monthlyLimit = monthlyLimit,
@@ -42,8 +47,8 @@ object BudgetInsightsCalculator {
             percentSpent = percent,
             isExceeded = isExceeded,
             exceededAmount = Money.vnd(exceededAmount),
-            suggestedWeekly = Money.vnd((remaining / weeksRemaining).toLong()),
-            suggestedDaily = Money.vnd(remaining / daysRemaining)
+            suggestedWeekly = Money.vnd(weeklyBudget),
+            suggestedDaily = Money.vnd(dailyBudget)
         )
     }
 }

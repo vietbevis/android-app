@@ -148,17 +148,29 @@ class BudgetsViewModel(
         val remainingMinor = totalLimitMinor - totalSpentMinor
         
         val today = Calendar.getInstance()
-        val endOfMonth = Calendar.getInstance().apply { timeInMillis = endMillis }
-        val remainingDays = if (today.before(endOfMonth)) {
-            val diff = endMillis - today.timeInMillis
-            (diff / (24 * 60 * 60 * 1000)).toInt().coerceAtLeast(1)
-        } else 1
+        val isCurrentMonth = month == today.get(Calendar.MONTH) && year == today.get(Calendar.YEAR)
 
-        val safeToday = if (remainingMinor > 0) Money.vnd(remainingMinor / remainingDays) else Money.vnd(0)
-        val safeWeek = if (remainingMinor > 0) {
-            val remainingWeeks = (remainingDays / 7.0).coerceAtLeast(1.0)
-            Money.vnd((remainingMinor / remainingWeeks).toLong())
-        } else Money.vnd(0)
+        val safeToday: Money?
+        val safeWeek: Money?
+
+        if (isCurrentMonth && totalLimitMinor > 0) {
+            val daysInMonth = today.getActualMaximum(Calendar.DAY_OF_MONTH)
+            val dayOfMonth = today.get(Calendar.DAY_OF_MONTH)
+            val daysRemaining = (daysInMonth - dayOfMonth + 1).coerceAtLeast(1)
+
+            val remainingLong = remainingMinor.coerceAtLeast(0L)
+            val dailyBudget = remainingLong / daysRemaining
+
+            val dayOfWeek = today.get(Calendar.DAY_OF_WEEK)
+            val daysLeftInWeek = if (dayOfWeek == Calendar.SUNDAY) 1 else 7 - (dayOfWeek - 2)
+            val daysToAccountFor = minOf(daysLeftInWeek, daysRemaining)
+
+            safeToday = Money.vnd(dailyBudget)
+            safeWeek = Money.vnd(dailyBudget * daysToAccountFor)
+        } else {
+            safeToday = null
+            safeWeek = null
+        }
 
         val budgetedCategoryIds = budget?.categoryBudgets?.map { it.categoryId }?.toSet() ?: emptySet()
 
@@ -198,8 +210,8 @@ class BudgetsViewModel(
                 categoryProgressItems = progressItems,
                 totalSpent = Money.vnd(totalSpentMinor),
                 remainingAmount = Money.vnd(remainingMinor),
-                safeSpendToday = if (totalLimitMinor > 0) safeToday else null,
-                safeSpendThisWeek = if (totalLimitMinor > 0) safeWeek else null,
+                safeSpendToday = safeToday,
+                safeSpendThisWeek = safeWeek,
                 isTotalExceeded = totalLimitMinor in 1..<totalSpentMinor,
                 otherSpent = Money.vnd(otherSpentMinor),
                 otherBudgetLimit = Money.vnd(otherLimitMinor),
