@@ -11,12 +11,34 @@ import vn.vietbevis.apkbasic.data.transaction.toDto
 import vn.vietbevis.apkbasic.data.wallet.WalletDto
 import vn.vietbevis.apkbasic.data.wallet.toDomain
 import vn.vietbevis.apkbasic.data.wallet.toDto
+import vn.vietbevis.apkbasic.data.profile.ProfileDto
+import vn.vietbevis.apkbasic.data.profile.toDomain
+import vn.vietbevis.apkbasic.data.profile.toDto
 import vn.vietbevis.apkbasic.domain.model.Money
 import vn.vietbevis.apkbasic.domain.model.Transaction
 import vn.vietbevis.apkbasic.domain.model.TransactionType
+import vn.vietbevis.apkbasic.domain.model.UserProfile
 import vn.vietbevis.apkbasic.domain.model.WalletType
 
 class DtoMappingTest {
+    @Test
+    fun profileDtoMapsToDomainAndBack() {
+        val dto = ProfileDto(
+            id = "user-id",
+            displayName = "Viet Hoang",
+            avatar = "https://example.com/avatar.jpg",
+            updatedAt = "2026-05-20T14:00:00.123Z"
+        )
+
+        val domain = dto.toDomain()
+
+        assertEquals("Viet Hoang", domain.displayName)
+        assertEquals("https://example.com/avatar.jpg", domain.avatar)
+        assertEquals(1779285600123L, domain.updatedAt)
+        
+        assertEquals(dto, domain.toDto())
+    }
+
     @Test
     fun walletDtoMapsToDomainAndBack() {
         val dto = WalletDto(
@@ -61,7 +83,10 @@ class DtoMappingTest {
             photoPath = "user-id/transaction-id/photo.jpg",
         )
 
-        val domain = dto.toDomain(occurredAtEpochMillis = 1_777_000_000_000)
+        val domain = dto.toDomain(
+            occurredAtEpochMillis = 1_777_000_000_000,
+            updatedAtEpochMillis = 0L
+        )
 
         assertEquals(TransactionType.EXPENSE, domain.type)
         assertEquals(Money.vnd(45_000), domain.amount)

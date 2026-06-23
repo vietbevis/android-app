@@ -21,21 +21,32 @@ object DateCodecs {
     fun isoToEpochMillis(value: String): Long {
         if (value.isBlank()) return 0L
         return runCatching {
-            // Normalize Supabase format: "2024-05-20T14:00:00.123456+00:00" -> "2024-05-20T14:00:00.123Z"
-            val normalized = value
-                .replace(Regex("(\\.\\d{3})\\d+"), "$1") // Truncate micros to millis
-                .replace(Regex("\\+00:00$"), "Z")
-                .replace(Regex("Z$"), ".000Z") // Ensure dots exist for easy regex
-                .replace(Regex("\\.\\d{3}\\.000Z$"), ".000Z") // Clean up if we added too many
+            // Supabase/PostgreSQL often returns: 2024-05-20T14:00:00.123456+00
+            // We need to normalize it to yyyy-MM-dd'T'HH:mm:ss.SSS'Z'
+            var normalized = value
+                .replace(Regex("\\+00(:00)?$"), "Z") // Normalize timezone offset to Z
             
+            if (normalized.contains(".")) {
+                val parts = normalized.split(".")
+                val base = parts[0]
+                var fraction = parts[1].replace("Z", "")
+                // Truncate or pad to exactly 3 digits for milliseconds
+                fraction = if (fraction.length >= 3) fraction.substring(0, 3) else fraction.padEnd(3, '0')
+                normalized = "$base.${fraction}Z"
+            } else if (normalized.endsWith("Z")) {
+                normalized = normalized.replace("Z", ".000Z")
+            } else if (!normalized.contains("T")) {
+                // If it's just a date, assume start of day UTC
+                normalized = "${normalized}T00:00:00.000Z"
+            }
+
             isoFormatter.parse(normalized)?.time ?: 0L
         }.getOrElse {
-            // Last resort: try parsing without milliseconds
+            // Fallback for other formats if any
             runCatching {
-                val noMillis = value.split(".")[0].replace("Z", "")
                 SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US).apply {
                     timeZone = TimeZone.getTimeZone("UTC")
-                }.parse(noMillis)?.time ?: 0L
+                }.parse(value.substringBefore("."))?.time ?: 0L
             }.getOrDefault(0L)
         }
     }
