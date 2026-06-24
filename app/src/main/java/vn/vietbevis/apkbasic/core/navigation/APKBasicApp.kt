@@ -37,7 +37,6 @@ import androidx.compose.ui.platform.LocalContext
 import vn.vietbevis.apkbasic.R
 import vn.vietbevis.apkbasic.core.di.AppContainer
 import vn.vietbevis.apkbasic.domain.model.UserProfile
-import vn.vietbevis.apkbasic.feature.accounts.AccountsScreen
 import vn.vietbevis.apkbasic.feature.auth.AuthScreen
 import vn.vietbevis.apkbasic.feature.auth.AuthViewModel
 import vn.vietbevis.apkbasic.feature.budgets.BudgetsScreen
@@ -148,11 +147,6 @@ private fun MainAppShell(
                 appContainer = appContainer,
                 onEditTransaction = { editingTransaction = it }
             )
-            AppDestination.ACCOUNTS -> AccountsScreen(
-                modifier = contentModifier,
-                appContainer = appContainer,
-                userProfile = userProfile,
-            )
             AppDestination.BUDGETS -> BudgetsScreen(
                 modifier = contentModifier,
                 appContainer = appContainer,
@@ -191,7 +185,7 @@ private fun SnapBottomBar(
         contentColor = SnapWhite,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 34.dp, vertical = 12.dp),
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {

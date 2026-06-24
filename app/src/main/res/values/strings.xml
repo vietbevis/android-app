@@ -2,7 +2,6 @@
     <string name="app_name">SnapChi</string>
     <string name="destination_home">Trang chủ</string>
     <string name="destination_statistics">Thống kê</string>
-    <string name="destination_accounts">Tài khoản</string>
     <string name="destination_budgets">Ngân sách</string>
     <string name="destination_profile">Cá nhân</string>
     <string name="destination_capture">Thêm giao dịch</string>

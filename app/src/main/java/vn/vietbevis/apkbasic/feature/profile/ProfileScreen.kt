@@ -73,11 +73,7 @@ fun ProfileScreen(
             authRepository = appContainer.authRepository,
             photoRepository = appContainer.photoRepository,
             transactionRepository = appContainer.transactionRepository,
-            recurringTransactionRepository = appContainer.recurringTransactionRepository,
             userPreferenceRepository = appContainer.userPreferenceRepository,
-            sharingRepository = appContainer.sharingRepository,
-            walletRepository = appContainer.walletRepository,
-            categoryRepository = appContainer.categoryRepository,
             onProfileUpdated = onProfileUpdated,
         )
     }
@@ -90,19 +86,6 @@ fun ProfileScreen(
         onLanguageSelected = viewModel::setLanguage,
         onThemeModeSelected = viewModel::setThemeMode,
         onWeekStartSelected = viewModel::setWeekStart,
-        onWalletSelected = viewModel::onWalletSelected,
-        onCategorySelected = viewModel::onCategorySelected,
-        onRecurringAmountChange = viewModel::onRecurringAmountChange,
-        onRecurringNoteChange = viewModel::onRecurringNoteChange,
-        onCreateRecurring = viewModel::createRecurringTransaction,
-        onArchiveRecurring = viewModel::archiveRecurringTransaction,
-        onFriendUserIdChange = viewModel::onFriendUserIdChange,
-        onCreateFriendRequest = viewModel::createFriendRequest,
-        onGroupNameChange = viewModel::onGroupNameChange,
-        onCreateGroup = viewModel::createGroup,
-        onShareGroupSelected = viewModel::onShareGroupSelected,
-        onShareToGroup = viewModel::shareLatestTransactionToGroup,
-        onDeleteShared = viewModel::deleteSharedTransaction,
         onDisplayNameChange = viewModel::updateDisplayName,
         onAvatarPicked = viewModel::uploadAvatar,
         modifier = modifier
@@ -117,19 +100,6 @@ private fun ProfileContent(
     onLanguageSelected: (AppLanguage) -> Unit,
     onThemeModeSelected: (ThemeMode) -> Unit,
     onWeekStartSelected: (WeekStart) -> Unit,
-    onWalletSelected: (String) -> Unit,
-    onCategorySelected: (String) -> Unit,
-    onRecurringAmountChange: (String) -> Unit,
-    onRecurringNoteChange: (String) -> Unit,
-    onCreateRecurring: () -> Unit,
-    onArchiveRecurring: (String) -> Unit,
-    onFriendUserIdChange: (String) -> Unit,
-    onCreateFriendRequest: () -> Unit,
-    onGroupNameChange: (String) -> Unit,
-    onCreateGroup: () -> Unit,
-    onShareGroupSelected: (String) -> Unit,
-    onShareToGroup: () -> Unit,
-    onDeleteShared: (String) -> Unit,
     onDisplayNameChange: (String) -> Unit,
     onAvatarPicked: (ByteArray) -> Unit,
     modifier: Modifier = Modifier,
@@ -229,50 +199,6 @@ private fun ProfileContent(
                 )
             }
             item {
-                RecurringForm(
-                    uiState = uiState,
-                    onWalletSelected = onWalletSelected,
-                    onCategorySelected = onCategorySelected,
-                    onRecurringAmountChange = onRecurringAmountChange,
-                    onRecurringNoteChange = onRecurringNoteChange,
-                    onCreateRecurring = onCreateRecurring
-                )
-            }
-            if (uiState.recurringTransactions.isEmpty()) {
-                item {
-                    CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
-                        Text("Chưa có giao dịch định kỳ.", modifier = Modifier.padding(18.dp), color = CapTextSecondary)
-                    }
-                }
-            } else {
-                items(uiState.recurringTransactions, key = { it.id }) { recurring ->
-                    CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
-                        Row(Modifier.padding(18.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Column {
-                                Text(recurring.note ?: "Giao dịch định kỳ", style = MaterialTheme.typography.titleMedium)
-                                Text("${recurring.schedule.frequency.name.lowercase()} · ${recurring.amount.formatVnd()}", color = CapTextSecondary)
-                            }
-                            TextButton(onClick = { onArchiveRecurring(recurring.id) }) {
-                                Text("Lưu trữ")
-                            }
-                        }
-                    }
-                }
-            }
-            item {
-                SocialSharingCard(
-                    uiState = uiState,
-                    onFriendUserIdChange = onFriendUserIdChange,
-                    onCreateFriendRequest = onCreateFriendRequest,
-                    onGroupNameChange = onGroupNameChange,
-                    onCreateGroup = onCreateGroup,
-                    onShareGroupSelected = onShareGroupSelected,
-                    onShareToGroup = onShareToGroup,
-                    onDeleteShared = onDeleteShared
-                )
-            }
-            item { SettingsMenu() }
-            item {
                 Button(onClick = onSignOut, modifier = Modifier.fillMaxWidth()) {
                     Text("Đăng xuất")
                 }
@@ -291,7 +217,7 @@ private fun ProfileHeader(
     CapCard(modifier = Modifier.fillMaxWidth().padding(top = 20.dp), containerColor = CapSurfaceHigh) {
         Column(
             modifier = Modifier
-                .fillMaxWidth() // Added this to ensure column takes full width of the card
+                .fillMaxWidth()
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -371,170 +297,6 @@ private fun PreferencesCard(
 }
 
 @Composable
-private fun RecurringForm(
-    uiState: ProfileUiState,
-    onWalletSelected: (String) -> Unit,
-    onCategorySelected: (String) -> Unit,
-    onRecurringAmountChange: (String) -> Unit,
-    onRecurringNoteChange: (String) -> Unit,
-    onCreateRecurring: () -> Unit,
-) {
-    CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
-        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Giao dịch định kỳ", style = MaterialTheme.typography.titleLarge)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                uiState.wallets.forEach { wallet ->
-                    FilterChip(
-                        selected = uiState.selectedWalletId == wallet.id,
-                        onClick = { onWalletSelected(wallet.id) },
-                        label = { Text(wallet.name) },
-                    )
-                }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                uiState.categories.forEach { category ->
-                    FilterChip(
-                        selected = uiState.selectedCategoryId == category.id,
-                        onClick = { onCategorySelected(category.id) },
-                        label = { Text(category.name) },
-                    )
-                }
-            }
-            OutlinedTextField(
-                value = uiState.recurringAmountInput,
-                onValueChange = onRecurringAmountChange,
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Số tiền định kỳ") },
-                singleLine = true,
-            )
-            OutlinedTextField(
-                value = uiState.recurringNoteInput,
-                onValueChange = onRecurringNoteChange,
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Ghi chú") },
-                singleLine = true,
-            )
-            Button(onClick = onCreateRecurring, modifier = Modifier.fillMaxWidth()) {
-                Text("Lưu định kỳ hằng tháng")
-            }
-        }
-    }
-}
-
-@Composable
-private fun SocialSharingCard(
-    uiState: ProfileUiState,
-    onFriendUserIdChange: (String) -> Unit,
-    onCreateFriendRequest: () -> Unit,
-    onGroupNameChange: (String) -> Unit,
-    onCreateGroup: () -> Unit,
-    onShareGroupSelected: (String) -> Unit,
-    onShareToGroup: () -> Unit,
-    onDeleteShared: (String) -> Unit,
-) {
-    CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
-        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Bạn bè & nhóm", style = MaterialTheme.typography.titleLarge)
-            OutlinedTextField(
-                value = uiState.friendUserIdInput,
-                onValueChange = onFriendUserIdChange,
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("User id bạn bè") },
-                singleLine = true,
-            )
-            Button(onClick = onCreateFriendRequest, modifier = Modifier.fillMaxWidth()) {
-                Text("Gửi lời mời")
-            }
-            OutlinedTextField(
-                value = uiState.groupNameInput,
-                onValueChange = onGroupNameChange,
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Tên nhóm") },
-                singleLine = true,
-            )
-            Button(onClick = onCreateGroup, modifier = Modifier.fillMaxWidth()) {
-                Text("Tạo nhóm")
-            }
-            if (uiState.groups.isNotEmpty()) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    uiState.groups.forEach { group ->
-                        FilterChip(
-                            selected = uiState.selectedShareGroupId == group.id,
-                            onClick = { onShareGroupSelected(group.id) },
-                            label = { Text(group.name) },
-                        )
-                    }
-                }
-                Button(onClick = onShareToGroup, modifier = Modifier.fillMaxWidth()) {
-                    Text("Chia sẻ giao dịch gần nhất")
-                }
-            }
-            uiState.sharedTransactions.take(3).forEach { shared ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(shared.groupId?.let { "Nhóm $it" } ?: "Bạn bè", color = CapTextSecondary, modifier = Modifier.weight(1f))
-                    TextButton(onClick = { onDeleteShared(shared.id) }) {
-                        Text("Gỡ")
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun EditProfileCard(
-    displayName: String,
-    avatarUrl: String,
-    onDisplayNameChange: (String) -> Unit,
-    onAvatarChange: (String) -> Unit,
-    onUpdate: () -> Unit,
-) {
-    CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
-        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Chỉnh sửa hồ sơ", style = MaterialTheme.typography.titleLarge)
-            OutlinedTextField(
-                value = displayName,
-                onValueChange = onDisplayNameChange,
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Tên hiển thị") },
-                singleLine = true,
-            )
-            OutlinedTextField(
-                value = avatarUrl,
-                onValueChange = onAvatarChange,
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("URL Ảnh đại diện") },
-                singleLine = true,
-            )
-            Button(onClick = onUpdate, modifier = Modifier.fillMaxWidth()) {
-                Text("Lưu thay đổi")
-            }
-        }
-    }
-}
-
-@Composable
-private fun SettingsMenu() {
-    CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
-        Column {
-            listOf("Danh mục", "Góp ý", "Chia sẻ ứng dụng").forEach { label ->
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Text(label, style = MaterialTheme.typography.titleMedium)
-                    Text("›", color = CapTextSecondary)
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun OverviewTile(
     title: String,
     value: String,
@@ -561,29 +323,12 @@ private fun ProfileScreenPreview() {
                 income = Money.vnd(8000000),
                 expense = Money.vnd(3500000),
                 balance = Money.vnd(4500000),
-                recurringAmountInput = "1000000",
-                recurringNoteInput = "Tiền nhà",
-                friendUserIdInput = "user-123",
-                groupNameInput = "Gia đình",
             ),
             userProfile = UserProfile(id = "user-id", email = "viet.hoang@example.com", displayName = "Việt Hoàng"),
             onSignOut = {},
             onLanguageSelected = {},
             onThemeModeSelected = {},
             onWeekStartSelected = {},
-            onWalletSelected = {},
-            onCategorySelected = {},
-            onRecurringAmountChange = {},
-            onRecurringNoteChange = {},
-            onCreateRecurring = {},
-            onArchiveRecurring = {},
-            onFriendUserIdChange = {},
-            onCreateFriendRequest = {},
-            onGroupNameChange = {},
-            onCreateGroup = {},
-            onShareGroupSelected = {},
-            onShareToGroup = {},
-            onDeleteShared = {},
             onDisplayNameChange = {},
             onAvatarPicked = {}
         )
