@@ -85,7 +85,6 @@ fun ProfileScreen(
         onSignOut = onSignOut,
         onLanguageSelected = viewModel::setLanguage,
         onThemeModeSelected = viewModel::setThemeMode,
-        onWeekStartSelected = viewModel::setWeekStart,
         onDisplayNameChange = viewModel::updateDisplayName,
         onAvatarPicked = viewModel::uploadAvatar,
         modifier = modifier
@@ -99,7 +98,6 @@ private fun ProfileContent(
     onSignOut: () -> Unit,
     onLanguageSelected: (AppLanguage) -> Unit,
     onThemeModeSelected: (ThemeMode) -> Unit,
-    onWeekStartSelected: (WeekStart) -> Unit,
     onDisplayNameChange: (String) -> Unit,
     onAvatarPicked: (ByteArray) -> Unit,
     modifier: Modifier = Modifier,
@@ -195,7 +193,6 @@ private fun ProfileContent(
                     uiState = uiState,
                     onLanguageSelected = onLanguageSelected,
                     onThemeModeSelected = onThemeModeSelected,
-                    onWeekStartSelected = onWeekStartSelected
                 )
             }
             item {
@@ -257,7 +254,6 @@ private fun PreferencesCard(
     uiState: ProfileUiState,
     onLanguageSelected: (AppLanguage) -> Unit,
     onThemeModeSelected: (ThemeMode) -> Unit,
-    onWeekStartSelected: (WeekStart) -> Unit,
 ) {
     CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -279,16 +275,6 @@ private fun PreferencesCard(
                         selected = uiState.preference?.themeMode == theme,
                         onClick = { onThemeModeSelected(theme) },
                         label = { Text(theme.name.lowercase().replaceFirstChar { it.uppercase() }) },
-                    )
-                }
-            }
-            Text("Tuần bắt đầu", color = CapTextSecondary)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                WeekStart.entries.forEach { weekStart ->
-                    FilterChip(
-                        selected = uiState.preference?.weekStartsOn == weekStart,
-                        onClick = { onWeekStartSelected(weekStart) },
-                        label = { Text(if (weekStart == WeekStart.MONDAY) "Thứ 2" else "CN") },
                     )
                 }
             }
@@ -328,7 +314,6 @@ private fun ProfileScreenPreview() {
             onSignOut = {},
             onLanguageSelected = {},
             onThemeModeSelected = {},
-            onWeekStartSelected = {},
             onDisplayNameChange = {},
             onAvatarPicked = {}
         )

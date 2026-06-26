@@ -279,10 +279,11 @@ fun SnapColoredBanner(
 fun SnapSummaryBanner(
     label: String,
     amount: String,
-    meta: String,
     modifier: Modifier = Modifier,
+    meta: String? = null,
+    containerColor: Color = SnapCoral,
 ) {
-    SnapColoredBanner(modifier = modifier.fillMaxWidth(), containerColor = SnapCoral) {
+    SnapColoredBanner(modifier = modifier, containerColor = containerColor) {
         Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
             Text(label, style = MaterialTheme.typography.titleLarge, color = SnapWhite)
             Row(
@@ -291,7 +292,9 @@ fun SnapSummaryBanner(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(amount, style = MaterialTheme.typography.headlineLarge, color = SnapWhite)
-                Text(meta, style = MaterialTheme.typography.titleLarge, color = SnapWhite)
+                meta?.let {
+                    Text(it, style = MaterialTheme.typography.titleLarge, color = SnapWhite)
+                }
             }
         }
     }

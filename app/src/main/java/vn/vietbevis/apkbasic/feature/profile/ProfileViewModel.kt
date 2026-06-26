@@ -15,7 +15,6 @@ import vn.vietbevis.apkbasic.domain.model.TransactionType
 import vn.vietbevis.apkbasic.domain.model.ThemeMode
 import vn.vietbevis.apkbasic.domain.model.UserPreference
 import vn.vietbevis.apkbasic.domain.model.UserProfile
-import vn.vietbevis.apkbasic.domain.model.WeekStart
 import vn.vietbevis.apkbasic.domain.repository.AuthRepository
 import vn.vietbevis.apkbasic.domain.repository.TransactionRepository
 import vn.vietbevis.apkbasic.domain.repository.UserPreferenceRepository
@@ -125,10 +124,6 @@ class ProfileViewModel(
 
     fun setThemeMode(themeMode: ThemeMode) {
         updatePreference { it.copy(themeMode = themeMode) }
-    }
-
-    fun setWeekStart(weekStart: WeekStart) {
-        updatePreference { it.copy(weekStartsOn = weekStart) }
     }
 
     private fun updatePreference(transform: (UserPreference) -> UserPreference) {
