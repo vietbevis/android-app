@@ -15,11 +15,16 @@ class SupabaseTransactionRepository(
         monthStartEpochMillis: Long,
         monthEndEpochMillis: Long,
     ): Result<List<Transaction>> = appResult {
+        val startIso = DateCodecs.epochMillisToIso(monthStartEpochMillis)
+        val endIso = DateCodecs.epochMillisToIso(monthEndEpochMillis)
+        
         client.from("transactions")
             .select {
                 filter {
-                    gte("occurred_at", DateCodecs.epochMillisToIso(monthStartEpochMillis))
-                    lt("occurred_at", DateCodecs.epochMillisToIso(monthEndEpochMillis))
+                    and {
+                        gte("occurred_at", startIso)
+                        lt("occurred_at", endIso)
+                    }
                 }
                 order("occurred_at", Order.DESCENDING)
             }

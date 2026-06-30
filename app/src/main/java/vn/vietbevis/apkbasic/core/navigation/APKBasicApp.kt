@@ -141,6 +141,7 @@ private fun MainAppShell(
             AppDestination.STATISTICS -> StatisticsScreen(
                 modifier = contentModifier,
                 appContainer = appContainer,
+                userProfile = userProfile,
             )
             AppDestination.TRANSACTIONS -> vn.vietbevis.apkbasic.feature.transactions.TransactionsScreen(
                 modifier = contentModifier,

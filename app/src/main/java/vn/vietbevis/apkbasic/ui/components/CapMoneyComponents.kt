@@ -525,11 +525,13 @@ fun CapStatusPill(
     text: String,
     selected: Boolean,
     modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
 ) {
     SnapSecondaryPill(
         text = text,
         selected = selected,
         modifier = modifier,
+        onClick = onClick
     )
 }
 

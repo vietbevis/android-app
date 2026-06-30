@@ -3,7 +3,7 @@ package vn.vietbevis.apkbasic.data.bootstrap
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import vn.vietbevis.apkbasic.core.common.appResult
-import vn.vietbevis.apkbasic.data.profile.ProfileDto
+import vn.vietbevis.apkbasic.data.profile.toDto
 import vn.vietbevis.apkbasic.domain.model.Category
 import vn.vietbevis.apkbasic.domain.model.Money
 import vn.vietbevis.apkbasic.domain.model.TransactionType
@@ -20,7 +20,8 @@ class OnboardingBootstrapper(
     private val categoryRepository: CategoryRepository,
 ) {
     suspend fun ensureDefaults(profile: UserProfile): Result<Unit> = appResult {
-        supabaseClient.from("profiles").upsert(ProfileDto(id = profile.id))
+        // Upsert with full profile data to avoid wiping name/avatar
+        supabaseClient.from("profiles").upsert(profile.toDto())
 
         val wallets = walletRepository.listWallets(includeArchived = false).getOrThrow()
         if (wallets.isEmpty()) {
