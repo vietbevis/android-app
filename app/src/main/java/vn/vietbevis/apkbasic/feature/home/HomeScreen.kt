@@ -149,7 +149,7 @@ private fun HomeContent(
     modifier: Modifier = Modifier,
 ) {
     val userName = userProfile.displayName?.takeIf { it.isNotBlank() } ?: stringResource(R.string.app_name)
-    
+
     val monthOnly = monthLabel.substringBefore("/")
     
     LazyColumn(

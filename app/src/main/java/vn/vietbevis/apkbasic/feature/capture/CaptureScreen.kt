@@ -11,11 +11,13 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview as CameraXPreview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -274,7 +276,7 @@ private fun AmountCalculatorPanel(
                     color = if (transactionType == TransactionType.EXPENSE) CapExpenseCoral else CapIncomeMint,
                 )
                 Text(
-                    text = calculatorState.amountInput,
+                    text = formatAmountInput(calculatorState.amountInput),
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.ExtraBold,
                 )
@@ -501,7 +503,7 @@ private fun PhotoCapturePanel(
                     ) {
                         Text(if (flashEnabled) "Tắt flash" else "Bật flash")
                     }
-                    Button(
+                    Surface(
                         onClick = {
                             val file = File(context.cacheDir, "snapchi-${System.currentTimeMillis()}.jpg")
                             val output = ImageCapture.OutputFileOptions.Builder(file).build()
@@ -523,9 +525,18 @@ private fun PhotoCapturePanel(
                             .size(72.dp)
                             .semantics { contentDescription = "Chụp ảnh giao dịch" },
                         shape = CircleShape,
+                        color = MaterialTheme.colorScheme.primary,
                         enabled = !isSaving && imageCapture != null,
+                        border = BorderStroke(4.dp, Color.White.copy(alpha = 0.5f))
                     ) {
-                        Text("Chụp")
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = "Chụp",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                maxLines = 1,
+                            )
+                        }
                     }
                     OutlinedButton(
                         onClick = {
@@ -778,6 +789,15 @@ private fun OccurredAtRow(
             Text("Bây giờ")
         }
     }
+}
+
+private fun formatAmountInput(input: String): String {
+    return runCatching {
+        val symbols = java.text.DecimalFormatSymbols(java.util.Locale.US).apply {
+            groupingSeparator = '.'
+        }
+        java.text.DecimalFormat("#,###", symbols).format(input.toLong())
+    }.getOrDefault(input.ifBlank { "0" })
 }
 
 @Preview(showBackground = true, name = "Capture Screen")
