@@ -13,6 +13,7 @@ supabase = "3.2.6"
 ktor = "3.3.0"
 camerax = "1.6.0"
 coil = "3.0.4"
+datastore = "1.1.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -45,6 +46,7 @@ supabase-storage = { group = "io.github.jan-tennert.supabase", name = "storage-k
 ktor-client-android = { group = "io.ktor", name = "ktor-client-android", version.ref = "ktor" }
 coil-compose = { group = "io.coil-kt.coil3", name = "coil-compose", version.ref = "coil" }
 coil-network = { group = "io.coil-kt.coil3", name = "coil-network-okhttp", version.ref = "coil" }
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

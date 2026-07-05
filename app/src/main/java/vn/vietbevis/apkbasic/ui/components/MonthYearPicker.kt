@@ -25,6 +25,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,10 +33,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import vn.vietbevis.apkbasic.ui.theme.CapPrimaryBlue
-import vn.vietbevis.apkbasic.ui.theme.CapSurfaceHigh
 import java.util.Calendar
 import java.util.Locale
+import vn.vietbevis.apkbasic.R
 
 @Composable
 fun MonthYearPicker(
@@ -50,15 +50,15 @@ fun MonthYearPicker(
     val currentYear = currentCalendar.get(Calendar.YEAR)
 
     val months = listOf(
-        "Th 1", "Th 2", "Th 3", "Th 4",
-        "Th 5", "Th 6", "Th 7", "Th 8",
-        "Th 9", "Th 10", "Th 11", "Th 12"
+        stringResource(R.string.month_short_1), stringResource(R.string.month_short_2), stringResource(R.string.month_short_3), stringResource(R.string.month_short_4),
+        stringResource(R.string.month_short_5), stringResource(R.string.month_short_6), stringResource(R.string.month_short_7), stringResource(R.string.month_short_8),
+        stringResource(R.string.month_short_9), stringResource(R.string.month_short_10), stringResource(R.string.month_short_11), stringResource(R.string.month_short_12)
     )
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(CapSurfaceHigh, RoundedCornerShape(16.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh, RoundedCornerShape(16.dp))
             .padding(16.dp)
     ) {
         Row(
@@ -67,15 +67,15 @@ fun MonthYearPicker(
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = { onMonthSelected(selectedMonth, selectedYear - 1) }) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Năm trước")
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = stringResource(R.string.month_picker_prev_year))
             }
             Text(
-                text = "Năm $selectedYear",
+                text = stringResource(R.string.month_picker_year, selectedYear),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
             IconButton(onClick = { onMonthSelected(selectedMonth, selectedYear + 1) }) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Năm sau")
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = stringResource(R.string.month_picker_next_year))
             }
         }
 
@@ -114,11 +114,11 @@ private fun MonthItem(
         modifier = Modifier
             .aspectRatio(1f)
             .clip(RoundedCornerShape(12.dp))
-            .background(if (isSelected) CapPrimaryBlue else Color.Transparent)
+            .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
             .clickable(onClick = onClick)
             .then(
                 if (isCurrent && !isSelected) {
-                    Modifier.background(CapPrimaryBlue.copy(alpha = 0.1f))
+                    Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
                 } else Modifier
             ),
         contentAlignment = Alignment.Center
@@ -126,7 +126,7 @@ private fun MonthItem(
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = monthName,
-                color = if (isSelected) Color.White else if (isCurrent) CapPrimaryBlue else MaterialTheme.colorScheme.onSurface,
+                color = if (isSelected) MaterialTheme.colorScheme.onPrimary else if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 fontWeight = if (isSelected || isCurrent) FontWeight.Bold else FontWeight.Normal,
                 fontSize = 15.sp
             )
@@ -136,7 +136,7 @@ private fun MonthItem(
                         .padding(top = 4.dp)
                         .size(4.dp)
                         .clip(CircleShape)
-                        .background(if (isSelected) Color.White else CapPrimaryBlue)
+                        .background(if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary)
                 )
             }
         }
@@ -144,8 +144,8 @@ private fun MonthItem(
             Surface(
                 modifier = Modifier.align(Alignment.TopEnd).padding(4.dp),
                 shape = CircleShape,
-                color = CapPrimaryBlue,
-                border = BorderStroke(1.dp, Color.White)
+                color = MaterialTheme.colorScheme.primary,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.background)
             ) {
                 Box(modifier = Modifier.size(6.dp))
             }

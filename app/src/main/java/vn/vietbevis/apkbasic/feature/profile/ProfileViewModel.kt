@@ -76,7 +76,7 @@ class ProfileViewModel(
         }
     }
 
-    fun updateDisplayName(name: String) {
+    fun updateDisplayName(name: String, context: android.content.Context) {
         val newProfile = userProfile.copy(
             displayName = name.trim().ifBlank { null },
             updatedAt = System.currentTimeMillis()
@@ -85,7 +85,7 @@ class ProfileViewModel(
             authRepository.updateProfile(newProfile)
                 .onSuccess { updated ->
                     userProfile = updated
-                    _uiState.update { it.copy(userProfile = updated, infoMessage = "Đã cập nhật tên hiển thị.") }
+                    _uiState.update { it.copy(userProfile = updated, infoMessage = context.getString(vn.vietbevis.apkbasic.R.string.profile_msg_name_updated)) }
                     onProfileUpdated(updated)
                 }
                 .onFailure { error ->
@@ -94,7 +94,7 @@ class ProfileViewModel(
         }
     }
 
-    fun uploadAvatar(bytes: ByteArray) {
+    fun uploadAvatar(bytes: ByteArray, context: android.content.Context) {
         viewModelScope.launch {
             photoRepository.uploadAvatar(userProfile.id, bytes)
                 .onSuccess { publicUrl ->
@@ -105,7 +105,7 @@ class ProfileViewModel(
                     authRepository.updateProfile(newProfile)
                         .onSuccess { updated ->
                             userProfile = updated
-                            _uiState.update { it.copy(userProfile = updated, infoMessage = "Đã cập nhật ảnh đại diện.") }
+                            _uiState.update { it.copy(userProfile = updated, infoMessage = context.getString(vn.vietbevis.apkbasic.R.string.profile_msg_avatar_updated)) }
                             onProfileUpdated(updated)
                         }
                         .onFailure { error ->
@@ -113,25 +113,25 @@ class ProfileViewModel(
                         }
                 }
                 .onFailure { error ->
-                    _uiState.update { it.copy(errorMessage = "Không thể tải ảnh lên: ${error.userMessage()}") }
+                    _uiState.update { it.copy(errorMessage = context.getString(vn.vietbevis.apkbasic.R.string.profile_error_upload_avatar, error.userMessage())) }
                 }
         }
     }
 
-    fun setLanguage(language: AppLanguage) {
-        updatePreference { it.copy(language = language) }
+    fun setLanguage(language: AppLanguage, context: android.content.Context) {
+        updatePreference(context) { it.copy(language = language) }
     }
 
-    fun setThemeMode(themeMode: ThemeMode) {
-        updatePreference { it.copy(themeMode = themeMode) }
+    fun setThemeMode(themeMode: ThemeMode, context: android.content.Context) {
+        updatePreference(context) { it.copy(themeMode = themeMode) }
     }
 
-    private fun updatePreference(transform: (UserPreference) -> UserPreference) {
+    private fun updatePreference(context: android.content.Context, transform: (UserPreference) -> UserPreference) {
         val current = _uiState.value.preference ?: UserPreference(userId = userProfile.id)
         viewModelScope.launch {
             userPreferenceRepository.updatePreferences(transform(current))
                 .onSuccess { updated ->
-                    _uiState.update { it.copy(preference = updated, infoMessage = "Đã lưu cài đặt.") }
+                    _uiState.update { it.copy(preference = updated, infoMessage = context.getString(vn.vietbevis.apkbasic.R.string.profile_msg_settings_saved)) }
                 }
                 .onFailure { error -> _uiState.update { it.copy(errorMessage = error.userMessage()) } }
         }

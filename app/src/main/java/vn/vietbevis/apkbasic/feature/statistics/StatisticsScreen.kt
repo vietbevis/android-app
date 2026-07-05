@@ -40,22 +40,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import vn.vietbevis.apkbasic.core.di.AppContainer
+import vn.vietbevis.apkbasic.R
 import vn.vietbevis.apkbasic.domain.model.TransactionType
 import vn.vietbevis.apkbasic.domain.model.UserProfile
 import vn.vietbevis.apkbasic.domain.reporting.FinanceSummary
 import vn.vietbevis.apkbasic.ui.components.CapCard
 import vn.vietbevis.apkbasic.ui.components.CapPillRow
 import vn.vietbevis.apkbasic.ui.components.CapStatusPill
-import vn.vietbevis.apkbasic.ui.theme.CapBackground
-import vn.vietbevis.apkbasic.ui.theme.CapExpenseCoral
-import vn.vietbevis.apkbasic.ui.theme.CapIncomeMint
-import vn.vietbevis.apkbasic.ui.theme.CapPrimaryBlue
-import vn.vietbevis.apkbasic.ui.theme.CapSurfaceHigh
-import vn.vietbevis.apkbasic.ui.theme.CapTextSecondary
 import vn.vietbevis.apkbasic.ui.theme.APKBasicTheme
-import vn.vietbevis.apkbasic.ui.theme.SnapCream
-
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -69,13 +63,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import vn.vietbevis.apkbasic.domain.model.Money
-import vn.vietbevis.apkbasic.ui.theme.SnapBlue
-import vn.vietbevis.apkbasic.ui.theme.SnapYellow
-import vn.vietbevis.apkbasic.ui.theme.SnapMint
-import vn.vietbevis.apkbasic.ui.theme.SnapSlate
-import vn.vietbevis.apkbasic.ui.theme.SnapNavy
-import vn.vietbevis.apkbasic.ui.theme.SnapWhite
-import vn.vietbevis.apkbasic.ui.theme.SnapCoral
 
 @Composable
 fun StatisticsScreen(
@@ -99,7 +86,7 @@ fun StatisticsScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(CapBackground)
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
@@ -110,31 +97,31 @@ fun StatisticsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Thống kê", style = MaterialTheme.typography.headlineMedium)
+                    Text(stringResource(R.string.statistics_header), style = MaterialTheme.typography.headlineMedium)
                     Box {
                         Button(onClick = { showExportMenu = true }) {
-                            Text("Xuất CSV")
+                            Text(stringResource(R.string.statistics_export_csv))
                         }
                         DropdownMenu(
                             expanded = showExportMenu,
                             onDismissRequest = { showExportMenu = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text("Thu nhập") },
+                                text = { Text(stringResource(R.string.transaction_income_type)) },
                                 onClick = {
                                     showExportMenu = false
                                     performExport(context, viewModel, ExportType.INCOME, uiState.rangeLabel)
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("Chi tiêu") },
+                                text = { Text(stringResource(R.string.transaction_expense_type)) },
                                 onClick = {
                                     showExportMenu = false
                                     performExport(context, viewModel, ExportType.EXPENSE, uiState.rangeLabel)
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("Tất cả") },
+                                text = { Text(stringResource(R.string.statistics_export_all)) },
                                 onClick = {
                                     showExportMenu = false
                                     performExport(context, viewModel, ExportType.ALL, uiState.rangeLabel)
@@ -146,12 +133,12 @@ fun StatisticsScreen(
                 
                 CapPillRow(Modifier.padding(top = 16.dp)) {
                     CapStatusPill(
-                        text = "Tháng", 
+                        text = stringResource(R.string.statistics_month_tab), 
                         selected = uiState.rangeType == StatisticsRangeType.MONTH,
                         onClick = { viewModel.setRangeType(StatisticsRangeType.MONTH) }
                     )
                     CapStatusPill(
-                        text = "Năm", 
+                        text = stringResource(R.string.statistics_year_tab), 
                         selected = uiState.rangeType == StatisticsRangeType.YEAR,
                         onClick = { viewModel.setRangeType(StatisticsRangeType.YEAR) }
                     )
@@ -164,14 +151,14 @@ fun StatisticsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = viewModel::navigatePrevious) {
-                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Trước")
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = stringResource(R.string.statistics_nav_prev))
                     }
                     Text(
                         text = uiState.rangeLabel,
                         style = MaterialTheme.typography.titleLarge,
                     )
                     IconButton(onClick = viewModel::navigateNext) {
-                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Sau")
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = stringResource(R.string.statistics_nav_next))
                     }
                 }
             }
@@ -205,19 +192,19 @@ private fun performExport(
     type: ExportType,
     label: String
 ) {
-    val csv = viewModel.exportCsv(type)
+    val csv = viewModel.exportCsv(type, context)
     if (csv != null) {
         val typeLabel = when (type) {
-            ExportType.INCOME -> "Thu nhập"
-            ExportType.EXPENSE -> "Chi tiêu"
-            ExportType.ALL -> "Tổng hợp"
+            ExportType.INCOME -> context.getString(R.string.transaction_income_type)
+            ExportType.EXPENSE -> context.getString(R.string.transaction_expense_type)
+            ExportType.ALL -> context.getString(R.string.statistics_export_all_label)
         }
         val intent = Intent(Intent.ACTION_SEND).apply {
             this.type = "text/csv"
-            putExtra(Intent.EXTRA_SUBJECT, "Báo cáo $typeLabel - $label")
+            putExtra(Intent.EXTRA_SUBJECT, context.getString(R.string.statistics_export_subject, typeLabel, label))
             putExtra(Intent.EXTRA_TEXT, csv)
         }
-        context.startActivity(Intent.createChooser(intent, "Xuất dữ liệu CSV"))
+        context.startActivity(Intent.createChooser(intent, context.getString(R.string.statistics_export_chooser_title)))
     }
 }
 
@@ -235,21 +222,21 @@ private fun StatisticsContent(
         // Core Stats
         Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             StatCard(
-                title = "Thu nhập", 
+                title = stringResource(R.string.transaction_income_type), 
                 value = summary.income.formatVnd(), 
-                accent = CapIncomeMint, 
+                accent = MaterialTheme.colorScheme.primary, 
                 modifier = Modifier.weight(1f).clickable { selectedChartType = TransactionType.INCOME }
             )
             StatCard(
-                title = "Chi tiêu", 
+                title = stringResource(R.string.transaction_expense_type), 
                 value = summary.expense.formatVnd(), 
-                accent = CapExpenseCoral, 
+                accent = MaterialTheme.colorScheme.error, 
                 modifier = Modifier.weight(1f).clickable { selectedChartType = TransactionType.EXPENSE }
             )
         }
 
         // 1. Category Insights (Donut Chart)
-        CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
+        CapCard(modifier = Modifier.fillMaxWidth(), containerColor = MaterialTheme.colorScheme.surfaceContainerHigh) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -257,18 +244,18 @@ private fun StatisticsContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (selectedChartType == TransactionType.EXPENSE) "Chi tiêu theo danh mục" else "Thu nhập theo danh mục",
+                        text = if (selectedChartType == TransactionType.EXPENSE) stringResource(R.string.statistics_expense_by_category) else stringResource(R.string.statistics_income_by_category),
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.weight(1f)
                     )
                     CapPillRow {
                         CapStatusPill(
-                            text = "Chi", 
+                            text = stringResource(R.string.dashboard_expense), 
                             selected = selectedChartType == TransactionType.EXPENSE,
                             onClick = { selectedChartType = TransactionType.EXPENSE }
                         )
                         CapStatusPill(
-                            text = "Thu", 
+                            text = stringResource(R.string.dashboard_income), 
                             selected = selectedChartType == TransactionType.INCOME,
                             onClick = { selectedChartType = TransactionType.INCOME }
                         )
@@ -279,8 +266,8 @@ private fun StatisticsContent(
                 
                 if (data.isEmpty()) {
                     Text(
-                        if (selectedChartType == TransactionType.EXPENSE) "Chưa có dữ liệu chi tiêu." else "Chưa có dữ liệu thu nhập.",
-                        color = CapTextSecondary
+                        if (selectedChartType == TransactionType.EXPENSE) stringResource(R.string.statistics_empty_expense) else stringResource(R.string.statistics_empty_income),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 } else {
                     Row(
@@ -297,7 +284,7 @@ private fun StatisticsContent(
                             data.take(4).forEachIndexed { index, item ->
                                 val percent = (item.amount.minorUnits.toDouble() / totalUnits.toDouble() * 100).toInt()
                                 ChartLegend(
-                                    label = "${item.category?.name ?: "Khác"} ($percent%)",
+                                    label = "${item.category?.name ?: stringResource(R.string.wallet_type_other)} ($percent%)",
                                     color = chartColors[index % chartColors.size],
                                     amount = item.amount.formatVnd()
                                 )
@@ -310,17 +297,17 @@ private fun StatisticsContent(
 
         // 2. Goals (Mục tiêu)
         if (rangeType == StatisticsRangeType.MONTH && goalStatus != null) {
-            CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
+            CapCard(modifier = Modifier.fillMaxWidth(), containerColor = MaterialTheme.colorScheme.surfaceContainerHigh) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Mục tiêu tháng", style = MaterialTheme.typography.titleLarge)
+                        Text(stringResource(R.string.statistics_monthly_goal), style = MaterialTheme.typography.titleLarge)
                         Text(
-                            if (goalStatus.isTotalExceeded) "Vượt ngưỡng" else "Trong tầm kiểm soát",
-                            color = if (goalStatus.isTotalExceeded) CapExpenseCoral else CapIncomeMint,
+                            if (goalStatus.isTotalExceeded) stringResource(R.string.statistics_goal_exceeded) else stringResource(R.string.statistics_goal_on_track),
+                            color = if (goalStatus.isTotalExceeded) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -329,24 +316,24 @@ private fun StatisticsContent(
                     // Total Budget Progress
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Tổng ngân sách", style = MaterialTheme.typography.bodyMedium)
+                            Text(stringResource(R.string.statistics_total_budget), style = MaterialTheme.typography.bodyMedium)
                             Text(
                                 "${goalStatus.totalSpent.formatVnd()} / ${goalStatus.monthlyBudget?.amount?.formatVnd()}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = CapTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                         LinearProgressIndicator(
                             progress = { goalStatus.totalProgress.coerceIn(0f, 1f) },
                             modifier = Modifier.fillMaxWidth().height(10.dp),
-                            color = if (goalStatus.isTotalExceeded) CapExpenseCoral else CapPrimaryBlue,
-                            trackColor = CapBackground,
+                            color = if (goalStatus.isTotalExceeded) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                            trackColor = MaterialTheme.colorScheme.background,
                         )
                     }
 
                     // Category Specific Budgets
                     if (goalStatus.categoryStatuses.isNotEmpty()) {
-                        Text("Hạn mức danh mục", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
+                        Text(stringResource(R.string.statistics_category_budget), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
                         goalStatus.categoryStatuses.forEach { status ->
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -354,14 +341,14 @@ private fun StatisticsContent(
                                     Text(
                                         "${status.spentAmount.formatVnd()} / ${status.budgetAmount.formatVnd()}",
                                         style = MaterialTheme.typography.labelSmall,
-                                        color = if (status.isExceeded) CapExpenseCoral else CapTextSecondary
+                                        color = if (status.isExceeded) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                                 LinearProgressIndicator(
                                     progress = { status.progress.coerceIn(0f, 1f) },
                                     modifier = Modifier.fillMaxWidth().height(6.dp),
-                                    color = if (status.isExceeded) CapExpenseCoral else CapPrimaryBlue.copy(alpha = 0.7f),
-                                    trackColor = CapBackground,
+                                    color = if (status.isExceeded) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                                    trackColor = MaterialTheme.colorScheme.background,
                                 )
                             }
                         }
@@ -371,27 +358,27 @@ private fun StatisticsContent(
                     if (goalStatus.otherBudget.minorUnits > 0) {
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("Ngân sách còn lại", style = MaterialTheme.typography.bodySmall)
+                                Text(stringResource(R.string.statistics_remaining_budget), style = MaterialTheme.typography.bodySmall)
                                 Text(
                                     "${goalStatus.otherSpent.formatVnd()} / ${goalStatus.otherBudget.formatVnd()}",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = if (goalStatus.isOtherExceeded) CapExpenseCoral else CapTextSecondary
+                                    color = if (goalStatus.isOtherExceeded) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             LinearProgressIndicator(
                                 progress = { goalStatus.otherProgress.coerceIn(0f, 1f) },
                                 modifier = Modifier.fillMaxWidth().height(6.dp),
-                                color = if (goalStatus.isOtherExceeded) CapExpenseCoral else CapPrimaryBlue.copy(alpha = 0.7f),
-                                trackColor = CapBackground,
+                                color = if (goalStatus.isOtherExceeded) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                                trackColor = MaterialTheme.colorScheme.background,
                             )
                         }
                     }
                 }
             }
         } else if (rangeType == StatisticsRangeType.YEAR && yearlySummary != null) {
-            CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
+            CapCard(modifier = Modifier.fillMaxWidth(), containerColor = MaterialTheme.colorScheme.surfaceContainerHigh) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text("Hiệu quả quản lý ngân sách", style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.statistics_yearly_performance_title), style = MaterialTheme.typography.titleLarge)
                     
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -403,26 +390,26 @@ private fun StatisticsContent(
                                 progress = { yearlySummary.performancePercent / 100f },
                                 modifier = Modifier.fillMaxSize(),
                                 strokeWidth = 8.dp,
-                                color = if (yearlySummary.performancePercent >= 80) CapIncomeMint else SnapYellow,
-                                trackColor = CapBackground
+                                color = if (yearlySummary.performancePercent >= 80) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary,
+                                trackColor = MaterialTheme.colorScheme.background
                             )
                             Text("${yearlySummary.performancePercent}%", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         }
                         
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(
-                                "Bạn đã đạt mục tiêu ${yearlySummary.monthsSuccessful}/${yearlySummary.monthsBudgeted} tháng",
+                                stringResource(R.string.statistics_yearly_months_success, yearlySummary.monthsSuccessful, yearlySummary.monthsBudgeted),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Text(
-                                "Tổng chi tiêu: ${yearlySummary.totalSpent.formatVnd()}",
+                                stringResource(R.string.statistics_total_spent_label, yearlySummary.totalSpent.formatVnd()),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = CapTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                "Tổng ngân sách: ${yearlySummary.totalBudgeted.formatVnd()}",
+                                stringResource(R.string.statistics_total_budget_label, yearlySummary.totalBudgeted.formatVnd()),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = CapTextSecondary
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -432,9 +419,9 @@ private fun StatisticsContent(
 
         // 3. Income vs. Expense Trends (Only in YEAR view)
         if (rangeType == StatisticsRangeType.YEAR) {
-            CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
+            CapCard(modifier = Modifier.fillMaxWidth(), containerColor = MaterialTheme.colorScheme.surfaceContainerHigh) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text("Xu hướng thu chi", style = MaterialTheme.typography.titleLarge)
+                    Text(stringResource(R.string.statistics_trend_title), style = MaterialTheme.typography.titleLarge)
                     TrendChart(
                         modifier = Modifier.fillMaxWidth().height(180.dp),
                         trends = monthlyTrends
@@ -444,9 +431,9 @@ private fun StatisticsContent(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        LegendItem("Thu", CapIncomeMint)
+                        LegendItem(stringResource(R.string.dashboard_income), MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.width(16.dp))
-                        LegendItem("Chi", CapExpenseCoral)
+                        LegendItem(stringResource(R.string.dashboard_expense), MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -491,7 +478,7 @@ private fun TrendChart(
     if (trends.isEmpty()) return
     val maxAmount = trends.maxOf { maxOf(it.income, it.expense) }.coerceAtLeast(1L).toFloat()
     
-    val labelColor = CapTextSecondary
+    val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
     val textMeasurer = androidx.compose.ui.text.rememberTextMeasurer()
     val textStyle = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp)
     val valueStyle = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp, fontWeight = FontWeight.Bold)
@@ -507,20 +494,24 @@ private fun TrendChart(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Tháng ${trend.label}", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.dashboard_month_label, trend.label), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Thu: ${vn.vietbevis.apkbasic.domain.model.Money.vnd(trend.income).formatVnd()}", color = CapIncomeMint, style = MaterialTheme.typography.labelMedium)
-                    Text("Chi: ${vn.vietbevis.apkbasic.domain.model.Money.vnd(trend.expense).formatVnd()}", color = CapExpenseCoral, style = MaterialTheme.typography.labelMedium)
+                    Text("${stringResource(R.string.dashboard_income)}: ${vn.vietbevis.apkbasic.domain.model.Money.vnd(trend.income).formatVnd()}", color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.labelMedium)
+                    Text("${stringResource(R.string.dashboard_expense)}: ${vn.vietbevis.apkbasic.domain.model.Money.vnd(trend.expense).formatVnd()}", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelMedium)
                 }
             }
         } else {
             Text(
-                text = "Chạm vào cột để xem số liệu chi tiết",
+                text = stringResource(R.string.statistics_trend_hint),
                 style = MaterialTheme.typography.labelSmall,
-                color = CapTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
         }
+        
+        val primaryColor = MaterialTheme.colorScheme.primary
+        val errorColor = MaterialTheme.colorScheme.error
+        val onBackgroundColor = MaterialTheme.colorScheme.onBackground
 
         Canvas(
             modifier = Modifier
@@ -571,7 +562,7 @@ private fun TrendChart(
                 // Income bar
                 val incomeHeight = (trend.income.toFloat() / maxAmount) * (chartHeight - 10.dp.toPx())
                 drawRoundRect(
-                    color = if (isSelected) CapIncomeMint else CapIncomeMint.copy(alpha = 0.6f),
+                    color = if (isSelected) primaryColor else primaryColor.copy(alpha = 0.6f),
                     topLeft = Offset(x - barWidth - 2f, chartHeight - incomeHeight),
                     size = Size(barWidth, incomeHeight),
                     cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.dp.toPx())
@@ -580,7 +571,7 @@ private fun TrendChart(
                 // Expense bar
                 val expenseHeight = (trend.expense.toFloat() / maxAmount) * (chartHeight - 10.dp.toPx())
                 drawRoundRect(
-                    color = if (isSelected) CapExpenseCoral else CapExpenseCoral.copy(alpha = 0.6f),
+                    color = if (isSelected) errorColor else errorColor.copy(alpha = 0.6f),
                     topLeft = Offset(x + 2f, chartHeight - expenseHeight),
                     size = Size(barWidth, expenseHeight),
                     cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.dp.toPx())
@@ -590,7 +581,7 @@ private fun TrendChart(
                 val labelResult = textMeasurer.measure(trend.label, textStyle)
                 drawText(
                     textLayoutResult = labelResult,
-                    color = if (isSelected) SnapNavy else labelColor,
+                    color = if (isSelected) onBackgroundColor else labelColor,
                     topLeft = Offset(x - labelResult.size.width / 2, chartHeight + 4.dp.toPx())
                 )
                 
@@ -604,14 +595,14 @@ private fun TrendChart(
                     if (trend.income > 0) {
                         drawText(
                             textLayoutResult = incRes,
-                            color = CapIncomeMint,
+                            color = primaryColor,
                             topLeft = Offset(x - barWidth - 2f + (barWidth - incRes.size.width) / 2, chartHeight - incomeHeight - incRes.size.height - 2.dp.toPx())
                         )
                     }
                     if (trend.expense > 0) {
                         drawText(
                             textLayoutResult = expRes,
-                            color = CapExpenseCoral,
+                            color = errorColor,
                             topLeft = Offset(x + 2f + (barWidth - expRes.size.width) / 2, chartHeight - expenseHeight - expRes.size.height - 2.dp.toPx())
                         )
                     }
@@ -644,12 +635,18 @@ private fun LegendItem(label: String, color: Color) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(10.dp).background(color, CircleShape))
         Spacer(Modifier.width(6.dp))
-        Text(label, style = MaterialTheme.typography.labelSmall, color = CapTextSecondary)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
+// chartColors uses static fallback since they're for generic donut chart slices, 
+// wait, I can use Compose Color here
 private val chartColors = listOf(
-    SnapCoral, SnapBlue, SnapMint, SnapYellow, SnapSlate
+    Color(0xFFFF7E67), // SnapCoral
+    Color(0xFF5F9DF7), // SnapBlue
+    Color(0xFF65D3B8), // SnapMint
+    Color(0xFFFFD369), // SnapYellow
+    Color(0xFF94A3B8)  // SnapSlate
 )
 
 @Composable
@@ -659,7 +656,7 @@ private fun StatCard(
     accent: Color,
     modifier: Modifier = Modifier,
 ) {
-    CapCard(modifier = modifier, containerColor = CapSurfaceHigh) {
+    CapCard(modifier = modifier, containerColor = MaterialTheme.colorScheme.surfaceContainerHigh) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(
                 modifier = Modifier
@@ -667,7 +664,7 @@ private fun StatCard(
                     .height(34.dp)
                     .background(accent, RoundedCornerShape(17.dp)),
             )
-            Text(title, color = CapTextSecondary)
+            Text(title, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(value, style = MaterialTheme.typography.titleLarge, color = accent)
         }
     }
@@ -680,36 +677,36 @@ private fun StatisticsScreenPreview() {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(SnapCream)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             item {
                 Column(Modifier.padding(top = 20.dp)) {
-                    Text("Thống kê", style = MaterialTheme.typography.headlineMedium)
+                    Text(stringResource(R.string.statistics_header), style = MaterialTheme.typography.headlineMedium)
                     CapPillRow(Modifier.padding(top = 16.dp)) {
-                        CapStatusPill(text = "Tháng", selected = true)
-                        CapStatusPill(text = "Năm", selected = false)
+                        CapStatusPill(text = stringResource(R.string.statistics_month_tab), selected = true)
+                        CapStatusPill(text = stringResource(R.string.statistics_year_tab), selected = false)
                     }
                 }
             }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    StatCard("Thu nhập", "8.000.000 đ", CapIncomeMint, Modifier.weight(1f))
-                    StatCard("Chi tiêu", "2.450.000 đ", CapExpenseCoral, Modifier.weight(1f))
+                    StatCard(stringResource(R.string.transaction_income_type), "8.000.000 đ", MaterialTheme.colorScheme.primary, Modifier.weight(1f))
+                    StatCard(stringResource(R.string.transaction_expense_type), "2.450.000 đ", MaterialTheme.colorScheme.error, Modifier.weight(1f))
                 }
             }
             item {
-                CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
+                CapCard(modifier = Modifier.fillMaxWidth(), containerColor = MaterialTheme.colorScheme.surfaceContainerHigh) {
                     Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Text("Chi tiêu theo danh mục", style = MaterialTheme.typography.titleLarge)
+                        Text(stringResource(R.string.statistics_expense_by_category), style = MaterialTheme.typography.titleLarge)
                         listOf("Ăn uống" to 0.62f, "Di chuyển" to 0.36f, "Mua sắm" to 0.24f).forEach { (label, fraction) ->
                             Text(label)
                             LinearProgressIndicator(
                                 progress = { fraction },
                                 modifier = Modifier.fillMaxWidth().height(8.dp),
-                                color = CapPrimaryBlue,
-                                trackColor = SnapCream,
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.background,
                             )
                         }
                     }

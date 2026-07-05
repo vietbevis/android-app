@@ -60,6 +60,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -77,13 +78,8 @@ import vn.vietbevis.apkbasic.domain.model.UserProfile
 import vn.vietbevis.apkbasic.ui.components.SnapCard
 import vn.vietbevis.apkbasic.ui.components.SnapPrimaryButton
 import vn.vietbevis.apkbasic.ui.components.SnapTextField
-import vn.vietbevis.apkbasic.ui.theme.CapExpenseCoral
-import vn.vietbevis.apkbasic.ui.theme.CapIncomeMint
-import vn.vietbevis.apkbasic.ui.theme.CapSurface
-import vn.vietbevis.apkbasic.ui.theme.CapTextSecondary
-import vn.vietbevis.apkbasic.ui.theme.SnapCream
-import vn.vietbevis.apkbasic.ui.theme.SnapSoftYellow
 import vn.vietbevis.apkbasic.ui.theme.APKBasicTheme
+import vn.vietbevis.apkbasic.ui.theme.SnapCream
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -116,10 +112,12 @@ fun CaptureScreen(
         }
     }
 
+    val context = LocalContext.current
+
     CaptureContent(
         uiState = uiState,
         onPhotoCaptured = viewModel::onPhotoCaptured,
-        onPhotoCaptureFailed = viewModel::onPhotoCaptureFailed,
+        onPhotoCaptureFailed = { viewModel.onPhotoCaptureFailed(context) },
         onRetakePhoto = viewModel::retakePhoto,
         onAmountChange = viewModel::onAmountChange,
         onCalculatorKey = viewModel::onCalculatorKey,
@@ -128,8 +126,8 @@ fun CaptureScreen(
         onCategorySelected = viewModel::onCategorySelected,
         onNoteChange = viewModel::onNoteChange,
         onResetOccurredAt = viewModel::resetOccurredAtToNow,
-        onSave = viewModel::save,
-        onSaveWithoutPhoto = viewModel::saveWithoutPhoto,
+        onSave = { viewModel.save(context) },
+        onSaveWithoutPhoto = { viewModel.saveWithoutPhoto(context) },
         onDelete = viewModel::delete,
         onShowAddCategory = { viewModel.showAddCategory(true) },
         onAddCategory = viewModel::createCategory,
@@ -231,22 +229,22 @@ private fun PermissionRationale(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(SnapCream)
+            .background(MaterialTheme.colorScheme.background)
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "Cần quyền camera",
+            text = stringResource(R.string.capture_permission_title),
             style = MaterialTheme.typography.headlineSmall,
         )
         Text(
-            text = "SnapChi dùng camera để chụp hóa đơn và tạo giao dịch nhanh.",
+            text = stringResource(R.string.capture_permission_desc),
             modifier = Modifier.padding(top = 8.dp),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         SnapPrimaryButton(
-            text = "Cấp quyền camera",
+            text = stringResource(R.string.capture_permission_grant),
             onClick = onRequestPermission,
             modifier = Modifier.padding(top = 20.dp),
         )
@@ -262,7 +260,7 @@ private fun AmountCalculatorPanel(
 ) {
     SnapCard(
         modifier = Modifier.fillMaxWidth(),
-        containerColor = SnapSoftYellow,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(
@@ -273,19 +271,19 @@ private fun AmountCalculatorPanel(
                 Text(
                     text = if (transactionType == TransactionType.EXPENSE) "-" else "+",
                     style = MaterialTheme.typography.headlineLarge,
-                    color = if (transactionType == TransactionType.EXPENSE) CapExpenseCoral else CapIncomeMint,
+                    color = if (transactionType == TransactionType.EXPENSE) vn.vietbevis.apkbasic.ui.theme.CapExpenseCoral else vn.vietbevis.apkbasic.ui.theme.CapIncomeMint,
                 )
                 Text(
                     text = formatAmountInput(calculatorState.amountInput),
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.ExtraBold,
                 )
-                Text(" đ", color = CapTextSecondary, style = MaterialTheme.typography.titleLarge)
+                Text(" đ", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.titleLarge)
             }
             Text(
-                text = "Thêm chi tiết",
+                text = stringResource(R.string.capture_add_details),
                 modifier = Modifier.align(Alignment.CenterHorizontally),
-                color = CapTextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             CalculatorKeypad(enabled = enabled, onCalculatorKey = onCalculatorKey)
         }
@@ -318,7 +316,7 @@ private fun CalculatorKeypad(
                     ) {
                         Text(
                             text = key.label,
-                            color = if (key.accent) CapExpenseCoral else MaterialTheme.colorScheme.onPrimary,
+                            color = if (key.accent) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onPrimary,
                             style = MaterialTheme.typography.titleLarge,
                         )
                     }
@@ -357,7 +355,7 @@ private fun CaptureForm(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(SnapCream)
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
     ) {
@@ -384,23 +382,23 @@ private fun CaptureForm(
         )
         Spacer(Modifier.height(12.dp))
         SelectionGroup(
-            title = "Ví",
+            title = stringResource(R.string.capture_wallet_label),
             options = uiState.wallets.map { it.id to it.name },
             selectedId = uiState.selectedWalletId,
             enabled = !uiState.isSaving,
             onSelected = onWalletSelected,
-            emptyMessage = "Chưa có ví. Vui lòng tải lại hoặc đăng nhập lại để khởi tạo dữ liệu.",
+            emptyMessage = stringResource(R.string.capture_wallet_empty),
         )
         Spacer(Modifier.height(12.dp))
         SelectionGroup(
-            title = "Danh mục",
+            title = stringResource(R.string.capture_category_label),
             options = uiState.categories
                 .filter { it.transactionType == uiState.type }
                 .map { it.id to it.name },
             selectedId = uiState.selectedCategoryId,
             enabled = !uiState.isSaving,
             onSelected = onCategorySelected,
-            emptyMessage = "Chưa có danh mục cho loại giao dịch này.",
+            emptyMessage = stringResource(R.string.capture_category_empty),
             onAction = onShowAddCategory,
             actionIcon = R.drawable.ic_plus
         )
@@ -409,7 +407,7 @@ private fun CaptureForm(
             value = uiState.noteInput,
             onValueChange = onNoteChange,
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Ghi chú") },
+            label = { Text(stringResource(R.string.capture_note_label)) },
             minLines = 2,
             enabled = !uiState.isSaving,
         )
@@ -428,8 +426,11 @@ private fun CaptureForm(
             Text(text = it, color = MaterialTheme.colorScheme.primary)
         }
         Spacer(Modifier.height(16.dp))
+        val captureSaving = stringResource(R.string.capture_saving)
+        val captureSave = stringResource(R.string.capture_save)
+        val captureUpdate = stringResource(R.string.capture_update)
         SnapPrimaryButton(
-            text = if (uiState.isSaving) "Đang lưu..." else if (uiState.transactionId == null) "Lưu giao dịch" else "Cập nhật",
+            text = if (uiState.isSaving) captureSaving else if (uiState.transactionId == null) captureSave else captureUpdate,
             onClick = onSave,
             modifier = Modifier.fillMaxWidth(),
             enabled = !uiState.isSaving && uiState.wallets.isNotEmpty(),
@@ -441,7 +442,7 @@ private fun CaptureForm(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !uiState.isSaving,
             ) {
-                Text("Xóa giao dịch", color = MaterialTheme.colorScheme.error)
+                Text(stringResource(R.string.capture_delete), color = MaterialTheme.colorScheme.error)
             }
         }
         if (uiState.canSaveWithoutPhoto) {
@@ -450,7 +451,7 @@ private fun CaptureForm(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !uiState.isSaving,
             ) {
-                Text("Lưu không ảnh")
+                Text(stringResource(R.string.capture_save_no_photo))
             }
         }
     }
@@ -494,16 +495,19 @@ private fun PhotoCapturePanel(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    val flashOff = stringResource(R.string.capture_flash_off)
+                    val flashOn = stringResource(R.string.capture_flash_on)
                     OutlinedButton(
                         onClick = { flashEnabled = !flashEnabled },
                         modifier = Modifier.semantics {
-                            contentDescription = if (flashEnabled) "Tắt flash" else "Bật flash"
+                            contentDescription = if (flashEnabled) flashOff else flashOn
                         },
                         enabled = !isSaving,
                     ) {
-                        Text(if (flashEnabled) "Tắt flash" else "Bật flash")
+                        Text(if (flashEnabled) flashOff else flashOn)
                     }
-                    Surface(
+                        val takePhotoDesc = stringResource(R.string.capture_take_photo_desc)
+                        Surface(
                         onClick = {
                             val file = File(context.cacheDir, "snapchi-${System.currentTimeMillis()}.jpg")
                             val output = ImageCapture.OutputFileOptions.Builder(file).build()
@@ -523,7 +527,7 @@ private fun PhotoCapturePanel(
                         },
                         modifier = Modifier
                             .size(72.dp)
-                            .semantics { contentDescription = "Chụp ảnh giao dịch" },
+                            .semantics { contentDescription = takePhotoDesc },
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.primary,
                         enabled = !isSaving && imageCapture != null,
@@ -531,13 +535,14 @@ private fun PhotoCapturePanel(
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Text(
-                                text = "Chụp",
+                                text = stringResource(R.string.capture_take_photo),
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 maxLines = 1,
                             )
                         }
                     }
+                    val switchCameraDesc = stringResource(R.string.capture_switch_camera_desc)
                     OutlinedButton(
                         onClick = {
                             lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
@@ -546,10 +551,10 @@ private fun PhotoCapturePanel(
                                 CameraSelector.LENS_FACING_BACK
                             }
                         },
-                        modifier = Modifier.semantics { contentDescription = "Đổi camera trước sau" },
+                        modifier = Modifier.semantics { contentDescription = switchCameraDesc },
                         enabled = !isSaving,
                     ) {
-                        Text("Đổi")
+                        Text(stringResource(R.string.capture_switch_camera))
                     }
                 }
             } else {
@@ -558,7 +563,7 @@ private fun PhotoCapturePanel(
                 } else if (remotePhotoUrl != null) {
                     AsyncImage(
                         model = remotePhotoUrl,
-                        contentDescription = "Ảnh giao dịch",
+                        contentDescription = stringResource(R.string.capture_photo_desc),
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
@@ -571,12 +576,13 @@ private fun PhotoCapturePanel(
                         .padding(16.dp),
                     horizontalArrangement = Arrangement.Center,
                 ) {
+                    val retakeDesc = stringResource(R.string.capture_retake_desc)
                     OutlinedButton(
                         onClick = onRetakePhoto,
-                        modifier = Modifier.semantics { contentDescription = "Chụp lại ảnh giao dịch" },
+                        modifier = Modifier.semantics { contentDescription = retakeDesc },
                         enabled = !isSaving,
                     ) {
-                        Text(if (remotePhotoUrl != null) "Thay ảnh" else "Chụp lại")
+                        Text(if (remotePhotoUrl != null) stringResource(R.string.capture_change_photo) else stringResource(R.string.capture_retake_photo))
                     }
                 }
             }
@@ -642,12 +648,12 @@ private fun CapturedPhotoPreview(
     }
     if (imageBitmap == null) {
         Box(modifier, contentAlignment = Alignment.Center) {
-            Text("Không đọc được ảnh", color = Color.White)
+            Text(stringResource(R.string.capture_photo_error), color = Color.White)
         }
     } else {
         Image(
             bitmap = imageBitmap,
-            contentDescription = "Ảnh giao dịch vừa chụp",
+            contentDescription = stringResource(R.string.capture_photo_captured_desc),
             modifier = modifier,
             contentScale = ContentScale.Crop,
         )
@@ -675,7 +681,7 @@ private fun TypeSelector(
                     onClick = { onTypeChange(type) },
                     enabled = enabled,
                 )
-            Text(if (type == TransactionType.EXPENSE) "Chi" else "Thu")
+            Text(if (type == TransactionType.EXPENSE) stringResource(R.string.dashboard_expense) else stringResource(R.string.dashboard_income))
             }
         }
     }
@@ -738,12 +744,12 @@ private fun AddCategoryDialog(
     var name by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Thêm danh mục ${if (type == TransactionType.EXPENSE) "chi" else "thu"}") },
+        title = { Text(stringResource(R.string.capture_add_category_title, if (type == TransactionType.EXPENSE) stringResource(R.string.dashboard_expense).lowercase() else stringResource(R.string.dashboard_income).lowercase())) },
         text = {
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Tên danh mục") },
+                label = { Text(stringResource(R.string.capture_category_name)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -753,12 +759,12 @@ private fun AddCategoryDialog(
                 onClick = { onConfirm(name) },
                 enabled = name.isNotBlank()
             ) {
-                Text("Thêm")
+                Text(stringResource(R.string.action_add))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Hủy")
+                Text(stringResource(R.string.action_cancel))
             }
         }
     )
@@ -778,7 +784,7 @@ private fun OccurredAtRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text("Thời gian", style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.capture_time_label), style = MaterialTheme.typography.titleSmall)
             Text(formatted, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Spacer(Modifier.width(12.dp))
@@ -786,7 +792,7 @@ private fun OccurredAtRow(
             onClick = onResetOccurredAt,
             enabled = enabled,
         ) {
-            Text("Bây giờ")
+            Text(stringResource(R.string.capture_time_now))
         }
     }
 }
@@ -811,7 +817,7 @@ private fun CaptureScreenPreview() {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
-            Text("Quét biên lai", style = MaterialTheme.typography.headlineMedium)
+            Text(stringResource(R.string.capture_header), style = MaterialTheme.typography.headlineMedium)
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -837,11 +843,11 @@ private fun CaptureScreenPreview() {
             SnapTextField(
                 value = "Ăn trưa",
                 onValueChange = {},
-                label = "Ghi chú",
+                label = stringResource(R.string.capture_note_label),
                 enabled = false,
             )
             SnapPrimaryButton(
-                text = "Lưu giao dịch",
+                text = stringResource(R.string.capture_save),
                 onClick = {},
                 modifier = Modifier.fillMaxWidth(),
             )

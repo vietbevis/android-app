@@ -40,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import vn.vietbevis.apkbasic.R
@@ -51,12 +52,6 @@ import vn.vietbevis.apkbasic.domain.model.UserProfile
 import vn.vietbevis.apkbasic.domain.model.WeekStart
 import vn.vietbevis.apkbasic.ui.components.CapCard
 import vn.vietbevis.apkbasic.ui.components.SnapAvatar
-import vn.vietbevis.apkbasic.ui.theme.CapBackground
-import vn.vietbevis.apkbasic.ui.theme.CapExpenseCoral
-import vn.vietbevis.apkbasic.ui.theme.CapIncomeMint
-import vn.vietbevis.apkbasic.ui.theme.CapPrimaryBlue
-import vn.vietbevis.apkbasic.ui.theme.CapSurfaceHigh
-import vn.vietbevis.apkbasic.ui.theme.CapTextSecondary
 import vn.vietbevis.apkbasic.ui.theme.APKBasicTheme
 
 @Composable
@@ -78,15 +73,16 @@ fun ProfileScreen(
         )
     }
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     ProfileContent(
         uiState = uiState,
         userProfile = uiState.userProfile,
         onSignOut = onSignOut,
-        onLanguageSelected = viewModel::setLanguage,
-        onThemeModeSelected = viewModel::setThemeMode,
-        onDisplayNameChange = viewModel::updateDisplayName,
-        onAvatarPicked = viewModel::uploadAvatar,
+        onLanguageSelected = { viewModel.setLanguage(it, context) },
+        onThemeModeSelected = { viewModel.setThemeMode(it, context) },
+        onDisplayNameChange = { viewModel.updateDisplayName(it, context) },
+        onAvatarPicked = { viewModel.uploadAvatar(it, context) },
         modifier = modifier
     )
 }
@@ -120,12 +116,12 @@ private fun ProfileContent(
     if (showEditNameDialog) {
         AlertDialog(
             onDismissRequest = { showEditNameDialog = false },
-            title = { Text("Đổi tên hiển thị") },
+            title = { Text(stringResource(R.string.profile_edit_name_title)) },
             text = {
                 OutlinedTextField(
                     value = tempDisplayName,
                     onValueChange = { tempDisplayName = it },
-                    label = { Text("Tên mới") },
+                    label = { Text(stringResource(R.string.profile_new_name_label)) },
                     singleLine = true
                 )
             },
@@ -134,12 +130,12 @@ private fun ProfileContent(
                     onDisplayNameChange(tempDisplayName)
                     showEditNameDialog = false
                 }) {
-                    Text("Lưu")
+                    Text(stringResource(R.string.action_save))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showEditNameDialog = false }) {
-                    Text("Hủy")
+                    Text(stringResource(R.string.action_cancel))
                 }
             }
         )
@@ -148,7 +144,7 @@ private fun ProfileContent(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(CapBackground)
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
@@ -174,18 +170,18 @@ private fun ProfileContent(
             }
         } else {
             uiState.errorMessage?.let { item { Text(it, color = MaterialTheme.colorScheme.error) } }
-            uiState.infoMessage?.let { item { Text(it, color = CapIncomeMint) } }
-            item { Text("Tổng quan", style = MaterialTheme.typography.titleLarge) }
+            uiState.infoMessage?.let { item { Text(it, color = MaterialTheme.colorScheme.primary) } }
+            item { Text(stringResource(R.string.profile_overview), style = MaterialTheme.typography.titleLarge) }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    OverviewTile("Giao dịch", uiState.transactionCount.toString(), Modifier.weight(1f))
-                    OverviewTile("Thu nhập", uiState.income.formatVnd(), Modifier.weight(1f), CapIncomeMint)
+                    OverviewTile(stringResource(R.string.profile_transactions), uiState.transactionCount.toString(), Modifier.weight(1f))
+                    OverviewTile(stringResource(R.string.transaction_income_type), uiState.income.formatVnd(), Modifier.weight(1f), vn.vietbevis.apkbasic.ui.theme.CapIncomeMint)
                 }
             }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    OverviewTile("Chi tiêu", uiState.expense.formatVnd(), Modifier.weight(1f), CapExpenseCoral)
-                    OverviewTile("Số dư", uiState.balance.formatVnd(), Modifier.weight(1f), CapIncomeMint)
+                    OverviewTile(stringResource(R.string.transaction_expense_type), uiState.expense.formatVnd(), Modifier.weight(1f), vn.vietbevis.apkbasic.ui.theme.CapExpenseCoral)
+                    OverviewTile(stringResource(R.string.dashboard_balance), uiState.balance.formatVnd(), Modifier.weight(1f), vn.vietbevis.apkbasic.ui.theme.CapIncomeMint)
                 }
             }
             item {
@@ -197,7 +193,7 @@ private fun ProfileContent(
             }
             item {
                 Button(onClick = onSignOut, modifier = Modifier.fillMaxWidth()) {
-                    Text("Đăng xuất")
+                    Text(stringResource(R.string.profile_logout))
                 }
             }
         }
@@ -211,7 +207,7 @@ private fun ProfileHeader(
     onAvatarClick: () -> Unit,
     onEditNameClick: () -> Unit,
 ) {
-    CapCard(modifier = Modifier.fillMaxWidth().padding(top = 20.dp), containerColor = CapSurfaceHigh) {
+    CapCard(modifier = Modifier.fillMaxWidth().padding(top = 20.dp), containerColor = MaterialTheme.colorScheme.surfaceContainerHigh) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -240,8 +236,8 @@ private fun ProfileHeader(
                 IconButton(onClick = onEditNameClick, modifier = Modifier.size(24.dp)) {
                     Icon(
                         painter = painterResource(R.drawable.ic_edit),
-                        contentDescription = "Đổi tên",
-                        tint = CapPrimaryBlue
+                        contentDescription = stringResource(R.string.profile_edit_name_desc),
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -255,20 +251,20 @@ private fun PreferencesCard(
     onLanguageSelected: (AppLanguage) -> Unit,
     onThemeModeSelected: (ThemeMode) -> Unit,
 ) {
-    CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
+    CapCard(modifier = Modifier.fillMaxWidth(), containerColor = MaterialTheme.colorScheme.surfaceContainerHigh) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("Cài đặt", style = MaterialTheme.typography.titleLarge)
-            Text("Ngôn ngữ", color = CapTextSecondary)
+            Text(stringResource(R.string.profile_settings), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
+            Text(stringResource(R.string.profile_language), color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 AppLanguage.entries.forEach { language ->
                     FilterChip(
                         selected = uiState.preference?.language == language,
                         onClick = { onLanguageSelected(language) },
-                        label = { Text(if (language == AppLanguage.VIETNAMESE) "Tiếng Việt" else "English") },
+                        label = { Text(if (language == AppLanguage.VIETNAMESE) stringResource(R.string.profile_language_vi) else stringResource(R.string.profile_language_en)) },
                     )
                 }
             }
-            Text("Giao diện", color = CapTextSecondary)
+            Text(stringResource(R.string.profile_theme), color = MaterialTheme.colorScheme.onSurfaceVariant)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ThemeMode.entries.forEach { theme ->
                     FilterChip(
@@ -289,9 +285,9 @@ private fun OverviewTile(
     modifier: Modifier = Modifier,
     accent: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface,
 ) {
-    CapCard(modifier = modifier, containerColor = CapSurfaceHigh) {
+    CapCard(modifier = modifier, containerColor = MaterialTheme.colorScheme.surfaceContainerHigh) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(title, color = CapTextSecondary)
+            Text(title, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(value, style = MaterialTheme.typography.titleLarge, color = accent)
         }
     }

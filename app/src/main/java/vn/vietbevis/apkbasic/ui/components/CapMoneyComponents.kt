@@ -98,7 +98,7 @@ fun SnapScreen(
 ) {
     Column(
         modifier = modifier
-            .background(SnapCream)
+            .background(MaterialTheme.colorScheme.background)
             .padding(contentPadding),
         verticalArrangement = Arrangement.spacedBy(SnapSpacing.item),
         content = content,
@@ -126,7 +126,7 @@ fun SnapTopBar(
             text = title,
             modifier = Modifier.weight(1f),
             style = MaterialTheme.typography.titleLarge,
-            color = SnapNavy,
+            color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Center,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -144,7 +144,7 @@ fun SnapIconButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     containerColor: Color = Color.Transparent,
-    contentColor: Color = SnapNavy,
+    contentColor: Color = MaterialTheme.colorScheme.onSurface,
 ) {
     Surface(
         onClick = onClick,
@@ -152,7 +152,7 @@ fun SnapIconButton(
         shape = CircleShape,
         color = containerColor,
         contentColor = contentColor,
-        border = BorderStroke(1.dp, SnapBorder),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
@@ -178,17 +178,17 @@ fun SnapPrimaryButton(
         enabled = enabled && !isLoading,
         shape = RoundedCornerShape(SnapRadius.input),
         colors = ButtonDefaults.buttonColors(
-            containerColor = SnapCoral,
-            contentColor = SnapWhite,
-            disabledContainerColor = SnapBorderSoft,
-            disabledContentColor = SnapSlate,
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            disabledContainerColor = MaterialTheme.colorScheme.outlineVariant,
+            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         ),
     ) {
         if (isLoading) {
             CircularProgressIndicator(
                 modifier = Modifier.size(18.dp),
                 strokeWidth = 2.dp,
-                color = SnapWhite,
+                color = MaterialTheme.colorScheme.onPrimary,
             )
             Spacer(Modifier.width(8.dp))
         }
@@ -207,9 +207,9 @@ fun SnapSecondaryPill(
         onClick = onClick,
         modifier = modifier,
         shape = RoundedCornerShape(SnapRadius.pill),
-        color = if (selected) SnapCoral else Color.Transparent,
-        contentColor = if (selected) SnapWhite else SnapNavy,
-        border = BorderStroke(1.dp, if (selected) SnapCoral else SnapBorder),
+        color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+        contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+        border = BorderStroke(1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline),
     ) {
         Text(
             text = text,
@@ -232,7 +232,7 @@ fun SnapSectionHeader(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(title, style = MaterialTheme.typography.titleLarge, color = SnapNavy)
+        Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
         actionText?.let {
             SnapSecondaryPill(text = it, selected = false, onClick = onAction)
         }
@@ -243,7 +243,7 @@ fun SnapSectionHeader(
 fun SnapCard(
     modifier: Modifier = Modifier,
     containerColor: Color = Color.Transparent,
-    borderColor: Color = SnapBorder,
+    borderColor: Color = MaterialTheme.colorScheme.outline,
     shape: RoundedCornerShape = RoundedCornerShape(SnapRadius.card),
     content: @Composable () -> Unit,
 ) {
@@ -267,7 +267,7 @@ fun SnapColoredBanner(
         modifier = modifier,
         shape = SnapBannerShape,
         color = containerColor,
-        contentColor = SnapNavy,
+        contentColor = MaterialTheme.colorScheme.onBackground,
     ) {
         Box(Modifier.padding(20.dp)) {
             content()
@@ -281,19 +281,19 @@ fun SnapSummaryBanner(
     amount: String,
     modifier: Modifier = Modifier,
     meta: String? = null,
-    containerColor: Color = SnapCoral,
+    containerColor: Color = MaterialTheme.colorScheme.primary,
 ) {
     SnapColoredBanner(modifier = modifier, containerColor = containerColor) {
         Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-            Text(label, style = MaterialTheme.typography.titleLarge, color = SnapWhite)
+            Text(label, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimary)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(amount, style = MaterialTheme.typography.headlineLarge, color = SnapWhite)
+                Text(amount, style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onPrimary)
                 meta?.let {
-                    Text(it, style = MaterialTheme.typography.titleLarge, color = SnapWhite)
+                    Text(it, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimary)
                 }
             }
         }
@@ -324,7 +324,7 @@ fun SnapAvatar(
         modifier = modifier
             .size(size)
             .clip(CircleShape)
-            .background(SnapSoftYellow),
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
         contentAlignment = Alignment.Center,
     ) {
         if (!avatarUrl.isNullOrBlank()) {
@@ -338,7 +338,7 @@ fun SnapAvatar(
             Text(
                 text = fallbackChar,
                 style = MaterialTheme.typography.headlineLarge,
-                color = SnapNavy,
+                color = MaterialTheme.colorScheme.onBackground,
             )
         }
     }
@@ -348,7 +348,7 @@ fun SnapAvatar(
 fun SnapIconTile(
     text: String,
     modifier: Modifier = Modifier,
-    containerColor: Color = SnapSoftYellow,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     size: Dp = 56.dp,
 ) {
     Box(
@@ -361,7 +361,7 @@ fun SnapIconTile(
         Text(
             text = text.take(1).uppercase(),
             style = MaterialTheme.typography.titleMedium,
-            color = SnapNavy,
+            color = MaterialTheme.colorScheme.onBackground,
         )
     }
 }
@@ -374,7 +374,7 @@ fun SnapListItem(
     trailingSubtitle: String,
     modifier: Modifier = Modifier,
     iconText: String = title,
-    iconContainerColor: Color = SnapSoftYellow,
+    iconContainerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     imageUrl: String? = null,
     onClick: (() -> Unit)? = null,
 ) {
@@ -390,7 +390,7 @@ fun SnapListItem(
                     modifier = Modifier
                         .size(56.dp)
                         .clip(RoundedCornerShape(SnapRadius.iconTile))
-                        .background(SnapBorderSoft),
+                        .background(MaterialTheme.colorScheme.outlineVariant),
                     contentAlignment = Alignment.Center
                 ) {
                     var isImageLoading by remember { mutableStateOf(true) }
@@ -408,7 +408,7 @@ fun SnapListItem(
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
                             strokeWidth = 2.dp,
-                            color = SnapCoral
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -416,12 +416,12 @@ fun SnapListItem(
                 SnapIconTile(text = iconText, containerColor = iconContainerColor)
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(title, style = MaterialTheme.typography.titleMedium, color = SnapNavy, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(subtitle, style = MaterialTheme.typography.labelMedium, color = SnapSlate, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(subtitle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(trailingTitle, style = MaterialTheme.typography.titleMedium, color = SnapNavy, maxLines = 1)
-                Text(trailingSubtitle, style = MaterialTheme.typography.labelMedium, color = SnapSlate, maxLines = 1)
+                Text(trailingTitle, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onBackground, maxLines = 1)
+                Text(trailingSubtitle, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
             }
         }
     }
@@ -439,24 +439,24 @@ fun SnapTextField(
     singleLine: Boolean = minLines == 1,
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(label, style = MaterialTheme.typography.labelLarge, color = SnapNavy)
+        Text(label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onBackground)
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(placeholder, color = SnapSlate) },
+            placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant) },
             enabled = enabled,
             minLines = minLines,
             singleLine = singleLine,
             shape = RoundedCornerShape(SnapRadius.input),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = SnapCream,
-                unfocusedContainerColor = SnapCream,
-                disabledContainerColor = SnapCreamSurface,
-                focusedBorderColor = SnapBorder,
-                unfocusedBorderColor = SnapBorder,
-                focusedTextColor = SnapNavy,
-                unfocusedTextColor = SnapNavy,
+                focusedContainerColor = MaterialTheme.colorScheme.background,
+                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                focusedBorderColor = MaterialTheme.colorScheme.outline,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
             ),
         )
     }
@@ -470,10 +470,10 @@ fun SnapMessageCard(
     actionText: String? = null,
     onAction: () -> Unit = {},
 ) {
-    SnapCard(modifier = modifier.fillMaxWidth(), containerColor = SnapCreamSurface, borderColor = SnapBorderSoft) {
+    SnapCard(modifier = modifier.fillMaxWidth(), containerColor = MaterialTheme.colorScheme.surfaceVariant, borderColor = MaterialTheme.colorScheme.outlineVariant) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(title, style = MaterialTheme.typography.titleLarge, color = SnapNavy)
-            Text(body, style = MaterialTheme.typography.bodyMedium, color = SnapSlate)
+            Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
+            Text(body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             actionText?.let {
                 SnapSecondaryPill(
                     text = it,
@@ -489,7 +489,7 @@ fun SnapMessageCard(
 @Composable
 fun CapCard(
     modifier: Modifier = Modifier,
-    containerColor: Color = CapSurface,
+    containerColor: Color = MaterialTheme.colorScheme.surfaceVariant,
     content: @Composable () -> Unit,
 ) {
     SnapCard(modifier = modifier, containerColor = containerColor, content = content)
@@ -504,7 +504,7 @@ fun CapSectionTitle(
         text = text,
         modifier = modifier,
         style = MaterialTheme.typography.titleLarge,
-        color = SnapNavy,
+        color = MaterialTheme.colorScheme.onBackground,
     )
 }
 

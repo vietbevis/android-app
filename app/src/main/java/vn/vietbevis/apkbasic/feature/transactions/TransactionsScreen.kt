@@ -27,15 +27,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import vn.vietbevis.apkbasic.R
 import vn.vietbevis.apkbasic.core.di.AppContainer
 import vn.vietbevis.apkbasic.domain.model.Transaction
 import vn.vietbevis.apkbasic.domain.model.TransactionType
 import vn.vietbevis.apkbasic.ui.components.SnapListItem
 import vn.vietbevis.apkbasic.ui.components.SnapSectionHeader
 import vn.vietbevis.apkbasic.ui.theme.APKBasicTheme
-import vn.vietbevis.apkbasic.ui.theme.SnapCream
+
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -69,11 +71,11 @@ fun TransactionsScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column {
-                Text("Giao dịch", style = MaterialTheme.typography.headlineSmall)
-                Text("Tháng ${uiState.monthRange.label}", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(R.string.transactions_header), style = MaterialTheme.typography.headlineSmall)
+                Text(stringResource(R.string.dashboard_month_label, uiState.monthRange.label), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             OutlinedButton(onClick = viewModel::refresh, enabled = !uiState.isLoading) {
-                Text("Tải lại")
+                Text(stringResource(R.string.common_reload))
             }
         }
         Spacer(Modifier.height(12.dp))
@@ -83,7 +85,7 @@ fun TransactionsScreen(
             uiState.transactions.isEmpty() -> EmptyTransactions()
             else -> LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(uiState.transactions, key = { it.id }) { transaction ->
-                    val walletName = uiState.wallets.firstOrNull { it.id == transaction.walletId }?.name ?: "Ví không rõ"
+                    val walletName = uiState.wallets.firstOrNull { it.id == transaction.walletId }?.name ?: stringResource(R.string.transactions_unknown_wallet)
                     val category = uiState.categories.firstOrNull { it.id == transaction.categoryId }
                     val isExpense = transaction.type == TransactionType.EXPENSE
                     val sign = if (isExpense) "-" else "+"
@@ -94,13 +96,13 @@ fun TransactionsScreen(
                     }
 
                     SnapListItem(
-                        title = category?.name ?: if (isExpense) "Khoản chi" else "Khoản thu",
+                        title = category?.name ?: if (isExpense) stringResource(R.string.transaction_expense_label) else stringResource(R.string.transaction_income_label),
                         subtitle = listOfNotNull(walletName, transaction.note).joinToString(" · "),
                         trailingTitle = "$sign${transaction.amount.formatVnd()}",
-                        trailingSubtitle = if (isExpense) "Sửa" else "Thu nhập",
+                        trailingSubtitle = if (isExpense) stringResource(R.string.transactions_action_edit) else stringResource(R.string.transaction_income_type),
                         iconText = category?.name ?: if (isExpense) "C" else "T",
                         imageUrl = imageUrl,
-                        iconContainerColor = if (isExpense) vn.vietbevis.apkbasic.ui.theme.SnapYellow else vn.vietbevis.apkbasic.ui.theme.SnapMint,
+                        iconContainerColor = if (isExpense) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary,
                         onClick = { onEditTransaction(transaction) }
                     )
                     Spacer(Modifier.height(8.dp))
@@ -112,8 +114,8 @@ fun TransactionsScreen(
     pendingDelete?.let { transaction ->
         AlertDialog(
             onDismissRequest = { pendingDelete = null },
-            title = { Text("Xóa giao dịch?") },
-            text = { Text("Giao dịch sẽ bị xóa khỏi lịch sử.") },
+            title = { Text(stringResource(R.string.transactions_delete_title)) },
+            text = { Text(stringResource(R.string.transactions_delete_body)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -121,12 +123,12 @@ fun TransactionsScreen(
                         pendingDelete = null
                     },
                 ) {
-                    Text("Xóa")
+                    Text(stringResource(R.string.action_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { pendingDelete = null }) {
-                    Text("Hủy")
+                    Text(stringResource(R.string.action_cancel))
                 }
             },
         )
@@ -135,7 +137,7 @@ fun TransactionsScreen(
 
 @Composable
 private fun EmptyTransactions() {
-    Text("Chưa có giao dịch trong tháng này.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Text(stringResource(R.string.transactions_empty_month), color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 @Preview(showBackground = true, name = "Transactions Screen")
@@ -145,12 +147,12 @@ private fun TransactionsScreenPreview() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(SnapCream)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
-            SnapSectionHeader(title = "Giao dịch", actionText = "Tải lại")
-            Text("Tháng 05/26", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            SnapSectionHeader(title = stringResource(R.string.transactions_header), actionText = stringResource(R.string.common_reload))
+            Text(stringResource(R.string.dashboard_month_label, "05/26"), color = MaterialTheme.colorScheme.onSurfaceVariant)
             SnapListItem(
                 title = "Ăn uống",
                 subtitle = "Tiền mặt · 15/05/2026 12:30",

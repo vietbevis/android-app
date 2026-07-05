@@ -16,7 +16,7 @@ import vn.vietbevis.apkbasic.ui.components.SnapMessageCard
 import vn.vietbevis.apkbasic.ui.components.SnapPrimaryButton
 import vn.vietbevis.apkbasic.ui.components.SnapSectionHeader
 import vn.vietbevis.apkbasic.ui.theme.APKBasicTheme
-import vn.vietbevis.apkbasic.ui.theme.SnapCream
+import androidx.compose.material3.MaterialTheme
 
 @Composable
 fun SettingsScreen(
@@ -26,7 +26,7 @@ fun SettingsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(SnapCream)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {

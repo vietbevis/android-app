@@ -267,11 +267,11 @@ class BudgetsViewModel(
         }
     }
 
-    fun saveBudget() {
+    fun saveBudget(context: android.content.Context) {
         val state = _uiState.value
         val totalAmount = state.totalAmountInput.toLongOrNull() ?: 0L
         if (totalAmount <= 0) {
-            _uiState.update { it.copy(errorMessage = "Vui lòng nhập hạn mức tổng lớn hơn 0") }
+            _uiState.update { it.copy(errorMessage = context.getString(vn.vietbevis.apkbasic.R.string.budgets_error_invalid_total)) }
             return
         }
 
@@ -310,7 +310,7 @@ class BudgetsViewModel(
                     _uiState.update { 
                         it.copy(
                             isSaving = false, 
-                            infoMessage = "Đã lưu ngân sách tháng ${state.selectedMonth + 1}/${state.selectedYear}"
+                            infoMessage = context.getString(vn.vietbevis.apkbasic.R.string.budgets_msg_saved, state.selectedMonth + 1, state.selectedYear)
                         )
                     }
                     loadMonthsWithBudget()

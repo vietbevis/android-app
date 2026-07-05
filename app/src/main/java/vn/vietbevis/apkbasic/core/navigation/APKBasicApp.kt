@@ -47,10 +47,6 @@ import vn.vietbevis.apkbasic.feature.statistics.StatisticsScreen
 import vn.vietbevis.apkbasic.ui.components.SnapIconButton
 import vn.vietbevis.apkbasic.ui.components.SnapTopBar
 import vn.vietbevis.apkbasic.ui.theme.APKBasicTheme
-import vn.vietbevis.apkbasic.ui.theme.SnapCoral
-import vn.vietbevis.apkbasic.ui.theme.SnapCream
-import vn.vietbevis.apkbasic.ui.theme.SnapNavy
-import vn.vietbevis.apkbasic.ui.theme.SnapWhite
 
 @Composable
 fun APKBasicApp() {
@@ -63,35 +59,59 @@ fun APKBasicApp() {
         )
     }
     val authState by authViewModel.uiState.collectAsState()
+    val userPreference by appContainer.userPreferenceRepository.preferencesFlow.collectAsState(initial = null)
 
-    when {
-        authState.isLoading && authState.authenticatedProfile == null -> LoadingScreen()
-        !authState.isAuthenticated -> AuthScreen(
-            uiState = authState,
-            onEmailChange = authViewModel::onEmailChange,
-            onPasswordChange = authViewModel::onPasswordChange,
-            onConfirmPasswordChange = authViewModel::onConfirmPasswordChange,
-            onToggleMode = authViewModel::toggleMode,
-            onSubmit = authViewModel::submit,
-        )
-        else -> MainAppShell(
-            appContainer = appContainer,
-            userProfile = requireNotNull(authState.authenticatedProfile),
-            onSignOut = authViewModel::signOut,
-            onProfileUpdated = authViewModel::updateProfile,
-        )
+    val isSystemDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val isDark = when (userPreference?.themeMode) {
+        vn.vietbevis.apkbasic.domain.model.ThemeMode.DARK -> true
+        vn.vietbevis.apkbasic.domain.model.ThemeMode.LIGHT -> false
+        else -> isSystemDark
+    }
+
+    val languageCode = if (userPreference?.language == vn.vietbevis.apkbasic.domain.model.AppLanguage.ENGLISH) "en" else "vi"
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val locale = java.util.Locale(languageCode)
+    if (configuration.locales.get(0)?.language != locale.language) {
+        java.util.Locale.setDefault(locale)
+        configuration.setLocale(locale)
+        @Suppress("DEPRECATION")
+        context.resources.updateConfiguration(configuration, context.resources.displayMetrics)
+    }
+
+    APKBasicTheme(darkTheme = isDark) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background,
+            contentColor = MaterialTheme.colorScheme.onBackground,
+        ) {
+            when {
+                authState.isLoading && authState.authenticatedProfile == null -> LoadingScreen()
+                !authState.isAuthenticated -> AuthScreen(
+                    uiState = authState,
+                    onEmailChange = authViewModel::onEmailChange,
+                    onPasswordChange = authViewModel::onPasswordChange,
+                    onConfirmPasswordChange = authViewModel::onConfirmPasswordChange,
+                    onToggleMode = authViewModel::toggleMode,
+                    onSubmit = authViewModel::submit,
+                )
+                else -> MainAppShell(
+                    appContainer = appContainer,
+                    userProfile = requireNotNull(authState.authenticatedProfile),
+                    onSignOut = authViewModel::signOut,
+                    onProfileUpdated = authViewModel::updateProfile,
+                )
+            }
+        }
     }
 }
 
 @Composable
 private fun LoadingScreen() {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(SnapCream),
+        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
-        CircularProgressIndicator(color = SnapCoral)
+        CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
     }
 }
 
@@ -120,9 +140,7 @@ private fun MainAppShell(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(SnapCream),
+        modifier = Modifier.fillMaxSize(),
     ) {
         val contentModifier = Modifier
             .fillMaxSize()
@@ -182,8 +200,8 @@ private fun SnapBottomBar(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(10000.dp),
-        color = SnapNavy,
-        contentColor = SnapWhite,
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
@@ -196,9 +214,9 @@ private fun SnapBottomBar(
                     onClick = { onDestinationSelected(destination) },
                     modifier = Modifier.size(46.dp),
                     shape = CircleShape,
-                    color = if (selected) SnapCoral else SnapNavy,
-                    contentColor = SnapWhite,
-                    border = if (selected) null else BorderStroke(1.dp, SnapNavy),
+                    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    border = if (selected) null else BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant),
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
@@ -225,11 +243,10 @@ private fun CaptureModalContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(SnapCream)
             .statusBarsPadding(),
     ) {
         SnapTopBar(
-            title = if (initialTransaction == null) stringResource(R.string.destination_capture) else "Sửa giao dịch",
+            title = if (initialTransaction == null) stringResource(R.string.destination_capture) else stringResource(R.string.capture_edit_transaction),
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
             navigationIcon = {
                 SnapIconButton(

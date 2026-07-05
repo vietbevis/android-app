@@ -45,7 +45,11 @@ class AppContainer(
     val loanRepository: LoanRepository = SupabaseLoanRepository(supabaseClient)
     val investmentRepository: InvestmentRepository = SupabaseInvestmentRepository(supabaseClient)
     val recurringTransactionRepository: RecurringTransactionRepository = SupabaseRecurringTransactionRepository(supabaseClient)
-    val userPreferenceRepository: UserPreferenceRepository = SupabaseUserPreferenceRepository(supabaseClient)
+    val localPreferenceRepository = vn.vietbevis.apkbasic.data.preference.LocalPreferenceRepository(context)
+    val userPreferenceRepository: UserPreferenceRepository = vn.vietbevis.apkbasic.data.preference.SyncingUserPreferenceRepository(
+        localRepository = localPreferenceRepository,
+        remoteRepository = SupabaseUserPreferenceRepository(supabaseClient)
+    )
     val sharingRepository: SharingRepository = SupabaseSharingRepository(supabaseClient)
     
     val budgetNotificationHelper = BudgetNotificationHelper(context)

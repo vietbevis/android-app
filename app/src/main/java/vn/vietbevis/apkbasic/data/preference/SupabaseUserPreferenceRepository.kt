@@ -6,9 +6,14 @@ import vn.vietbevis.apkbasic.core.common.appResult
 import vn.vietbevis.apkbasic.domain.model.UserPreference
 import vn.vietbevis.apkbasic.domain.repository.UserPreferenceRepository
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
+
 class SupabaseUserPreferenceRepository(
     private val client: SupabaseClient,
 ) : UserPreferenceRepository {
+    override val preferencesFlow: Flow<UserPreference?> = emptyFlow()
+
     override suspend fun readPreferences(): Result<UserPreference> = appResult {
         client.from("user_preferences")
             .select()

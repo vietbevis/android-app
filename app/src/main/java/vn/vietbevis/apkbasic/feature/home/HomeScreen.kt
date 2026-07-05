@@ -68,15 +68,7 @@ import vn.vietbevis.apkbasic.ui.components.SnapSecondaryPill
 import vn.vietbevis.apkbasic.ui.components.SnapSummaryBanner
 import vn.vietbevis.apkbasic.ui.components.SnapTopBar
 import vn.vietbevis.apkbasic.ui.theme.APKBasicTheme
-import vn.vietbevis.apkbasic.ui.theme.SnapBlue
-import vn.vietbevis.apkbasic.ui.theme.SnapCoral
-import vn.vietbevis.apkbasic.ui.theme.SnapCream
-import vn.vietbevis.apkbasic.ui.theme.SnapMint
-import vn.vietbevis.apkbasic.ui.theme.SnapNavy
-import vn.vietbevis.apkbasic.ui.theme.SnapSlate
-import vn.vietbevis.apkbasic.ui.theme.SnapSoftYellow
-import vn.vietbevis.apkbasic.ui.theme.SnapWhite
-import vn.vietbevis.apkbasic.ui.theme.SnapYellow
+import vn.vietbevis.apkbasic.ui.theme.APKBasicTheme
 
 @Composable
 fun HomeScreen(
@@ -155,7 +147,7 @@ private fun HomeContent(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(SnapCream)
+            .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {
@@ -185,15 +177,15 @@ private fun HomeContent(
         item {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 SnapSummaryBanner(
-                    label = "Thu tháng này",
+                    label = stringResource(R.string.dashboard_month_income),
                     amount = monthIncome,
-                    containerColor = SnapMint,
+                    containerColor = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f)
                 )
                 SnapSummaryBanner(
-                    label = "Chi tháng này",
+                    label = stringResource(R.string.dashboard_month_expense),
                     amount = monthExpense,
-                    containerColor = SnapCoral,
+                    containerColor = MaterialTheme.colorScheme.error,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -206,7 +198,7 @@ private fun HomeContent(
         item {
             SnapCard(
                 modifier = Modifier.fillMaxWidth(),
-                containerColor = SnapWhite,
+                containerColor = MaterialTheme.colorScheme.surfaceVariant,
                 borderColor = Color.Transparent
             ) {
                 Row(
@@ -215,21 +207,21 @@ private fun HomeContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Ngày $selectedDay/$monthOnly:",
+                        text = stringResource(R.string.dashboard_day_label, selectedDay, monthOnly),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = SnapNavy
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = "Thu $dayIncome",
+                        text = stringResource(R.string.dashboard_day_income, dayIncome),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = SnapMint,
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Medium
                     )
                     Text(
-                        text = "Chi $dayExpense",
+                        text = stringResource(R.string.dashboard_day_expense, dayExpense),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = SnapCoral,
+                        color = MaterialTheme.colorScheme.error,
                         fontWeight = FontWeight.Medium
                     )
                 }
@@ -244,22 +236,22 @@ private fun HomeContent(
             )
         }
         item {
-            SnapSectionHeader(title = "Giao dịch ngày $selectedDay/$monthOnly", actionText = "Quét biên lai", onAction = onOpenCapture)
+            SnapSectionHeader(title = stringResource(R.string.dashboard_day_transactions, selectedDay, monthOnly), actionText = stringResource(R.string.dashboard_action_scan), onAction = onOpenCapture)
         }
         when {
             isLoading -> item {
                 Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = SnapCoral)
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
             errorMessage != null -> item {
-                SnapMessageCard(title = "Không tải được dữ liệu", body = errorMessage, actionText = "Thử lại", onAction = onRefresh)
+                SnapMessageCard(title = stringResource(R.string.dashboard_error_load_data), body = errorMessage, actionText = stringResource(R.string.action_retry), onAction = onRefresh)
             }
             transactions.isEmpty() -> item {
                 SnapMessageCard(
-                    title = "Chưa có giao dịch",
-                    body = "Quét biên lai hoặc thêm khoản thu/chi để ngày này có dữ liệu.",
-                    actionText = "Thêm ngay",
+                    title = stringResource(R.string.dashboard_empty_title),
+                    body = stringResource(R.string.dashboard_empty_body),
+                    actionText = stringResource(R.string.dashboard_action_add_now),
                     onAction = onOpenCapture,
                 )
             }
@@ -280,8 +272,8 @@ private fun HomeContent(
 private fun BudgetInsightsSection(insights: BudgetInsights, onClick: () -> Unit) {
     SnapCard(
         modifier = Modifier.fillMaxWidth().clickable { onClick() },
-        containerColor = if (insights.isExceeded) SnapCoral.copy(alpha = 0.1f) else SnapWhite,
-        borderColor = if (insights.isExceeded) SnapCoral else Color.Transparent
+        containerColor = if (insights.isExceeded) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceVariant,
+        borderColor = if (insights.isExceeded) MaterialTheme.colorScheme.error else Color.Transparent
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(
@@ -290,33 +282,33 @@ private fun BudgetInsightsSection(insights: BudgetInsights, onClick: () -> Unit)
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (insights.isExceeded) "🚨 Vượt hạn mức!" else "💡 Gợi ý chi tiêu",
+                    text = if (insights.isExceeded) stringResource(R.string.budget_insight_exceeded) else stringResource(R.string.budget_insight_suggest),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = if (insights.isExceeded) SnapCoral else SnapNavy
+                    color = if (insights.isExceeded) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = "${insights.percentSpent}%",
                     style = MaterialTheme.typography.labelLarge,
-                    color = SnapSlate
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             if (insights.isExceeded) {
                 Text(
-                    text = "Bạn đã chi quá hạn mức tháng này ${insights.exceededAmount.formatVnd()}!",
+                    text = stringResource(R.string.budget_insight_exceeded_desc, insights.exceededAmount.formatVnd()),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = SnapCoral
+                    color = MaterialTheme.colorScheme.error
                 )
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     InsightRow(
-                        label = "Gợi ý tuần này:",
-                        value = "Tối đa ${insights.suggestedWeekly.formatVnd()}",
+                        label = stringResource(R.string.budget_insight_weekly_suggest),
+                        value = stringResource(R.string.budget_insight_max_amount, insights.suggestedWeekly.formatVnd()),
                         iconRes = R.drawable.ic_chart
                     )
                     InsightRow(
-                        label = "Hạn mức hôm nay:",
+                        label = stringResource(R.string.budget_insight_daily_limit),
                         value = insights.suggestedDaily.formatVnd(),
                         iconRes = R.drawable.ic_budget
                     )
@@ -337,18 +329,18 @@ private fun InsightRow(label: String, value: String, iconRes: Int) {
             painter = painterResource(iconRes),
             contentDescription = null,
             modifier = Modifier.size(16.dp),
-            tint = SnapBlue
+            tint = MaterialTheme.colorScheme.primary
         )
-        Text(label, style = MaterialTheme.typography.bodySmall, color = SnapSlate, modifier = Modifier.weight(1f))
-        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = SnapNavy)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 @Composable
 private fun MiniMetric(title: String, value: String, color: Color, modifier: Modifier = Modifier) {
     SnapColoredBanner(modifier = modifier, containerColor = color) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(title, style = MaterialTheme.typography.labelMedium, color = SnapSlate)
-            Text(value, style = MaterialTheme.typography.titleMedium, color = SnapNavy, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(title, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(value, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -361,7 +353,7 @@ private fun MonthStrip(
     onDaySelected: (Int) -> Unit,
     onNavigateMonth: (Int) -> Unit,
 ) {
-    SnapCard(modifier = Modifier.fillMaxWidth(), containerColor = SnapSoftYellow, borderColor = Color.Transparent) {
+    SnapCard(modifier = Modifier.fillMaxWidth(), containerColor = MaterialTheme.colorScheme.surfaceContainerHigh, borderColor = Color.Transparent) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -371,27 +363,30 @@ private fun MonthStrip(
                 IconButton(onClick = { onNavigateMonth(-1) }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                        contentDescription = "Tháng trước",
-                        tint = SnapNavy
+                        contentDescription = stringResource(R.string.dashboard_prev_month),
+                        tint = MaterialTheme.colorScheme.onBackground
                     )
                 }
-                Text("Tháng $monthLabel", style = MaterialTheme.typography.titleLarge, color = SnapNavy)
+                Text(stringResource(R.string.dashboard_month_title, monthLabel), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
                 IconButton(onClick = { onNavigateMonth(1) }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = "Tháng sau",
-                        tint = SnapNavy
+                        contentDescription = stringResource(R.string.dashboard_next_month),
+                        tint = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
 
             // Weekday headers
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
-                listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN").forEach { day ->
+                listOf(
+                    stringResource(R.string.day_mon), stringResource(R.string.day_tue), stringResource(R.string.day_wed),
+                    stringResource(R.string.day_thu), stringResource(R.string.day_fri), stringResource(R.string.day_sat), stringResource(R.string.day_sun)
+                ).forEach { day ->
                     Text(
                         text = day,
                         style = MaterialTheme.typography.labelMedium,
-                        color = SnapSlate,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.width(42.dp),
                         textAlign = TextAlign.Center
                     )
@@ -426,15 +421,15 @@ private fun DayPill(day: HomeCalendarDay, modifier: Modifier = Modifier, onClick
         onClick = onClick,
         modifier = modifier.size(width = 42.dp, height = 58.dp),
         shape = RoundedCornerShape(20.dp),
-        color = if (day.isSelected) SnapCoral else SnapCream,
-        contentColor = if (day.isSelected) SnapWhite else SnapNavy,
+        color = if (day.isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.background,
+        contentColor = if (day.isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Text(day.dayOfMonth.toString(), style = MaterialTheme.typography.labelLarge)
             Text(
                 text = if (day.transactionCount > 0) "${day.transactionCount}" else "•",
                 style = MaterialTheme.typography.labelSmall,
-                color = if (day.isSelected) SnapWhite else SnapSlate,
+                color = if (day.isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -458,13 +453,13 @@ private fun TransactionItem(
     }
 
     SnapListItem(
-        title = category?.name ?: if (isExpense) "Khoản chi" else "Khoản thu",
+        title = category?.name ?: if (isExpense) stringResource(R.string.transaction_expense_label) else stringResource(R.string.transaction_income_label),
         subtitle = listOfNotNull(wallet?.name, transaction.homeDateLabel(), transaction.note).joinToString(" · "),
         trailingTitle = "$sign${transaction.amount.formatVnd()}",
-        trailingSubtitle = if (isExpense) "Chi tiêu" else "Thu nhập",
+        trailingSubtitle = if (isExpense) stringResource(R.string.transaction_expense_type) else stringResource(R.string.transaction_income_type),
         iconText = category?.name ?: if (isExpense) "C" else "T",
         imageUrl = imageUrl,
-        iconContainerColor = if (isExpense) SnapYellow else SnapMint,
+        iconContainerColor = if (isExpense) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary,
         onClick = onClick,
     )
 }

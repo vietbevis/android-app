@@ -36,14 +36,6 @@ import androidx.compose.ui.unit.dp
 import vn.vietbevis.apkbasic.R
 import vn.vietbevis.apkbasic.ui.components.SnapPrimaryButton
 import vn.vietbevis.apkbasic.ui.theme.APKBasicTheme
-import vn.vietbevis.apkbasic.ui.theme.SnapBorder
-import vn.vietbevis.apkbasic.ui.theme.SnapBorderSoft
-import vn.vietbevis.apkbasic.ui.theme.SnapCoral
-import vn.vietbevis.apkbasic.ui.theme.SnapCream
-import vn.vietbevis.apkbasic.ui.theme.SnapCreamSurface
-import vn.vietbevis.apkbasic.ui.theme.SnapNavy
-import vn.vietbevis.apkbasic.ui.theme.SnapSlate
-import vn.vietbevis.apkbasic.ui.theme.SnapWhite
 
 @Composable
 fun AuthScreen(
@@ -58,7 +50,7 @@ fun AuthScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(SnapCream)
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp, vertical = 64.dp),
         verticalArrangement = Arrangement.spacedBy(80.dp),
@@ -85,16 +77,16 @@ private fun AuthBrand(modifier: Modifier = Modifier) {
         Surface(
             modifier = Modifier.size(64.dp),
             shape = RoundedCornerShape(topEnd = 20.dp, bottomStart = 20.dp),
-            color = SnapCoral,
-            contentColor = SnapWhite,
+            color = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Text("S", style = MaterialTheme.typography.headlineLarge)
             }
         }
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium, color = SnapNavy)
-            Text(stringResource(R.string.auth_product_label), style = MaterialTheme.typography.labelMedium, color = SnapSlate)
+            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground)
+            Text(stringResource(R.string.auth_product_label), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -118,13 +110,13 @@ private fun AuthPanel(
             Text(
                 text = stringResource(if (uiState.isSignUp) R.string.auth_sign_up_title else R.string.auth_sign_in_title),
                 style = MaterialTheme.typography.headlineMedium,
-                color = SnapNavy,
+                color = MaterialTheme.colorScheme.onBackground,
             )
             Text(
                 text = stringResource(if (uiState.isSignUp) R.string.auth_sign_up_description else R.string.auth_sign_in_description),
                 modifier = Modifier.fillMaxWidth(),
                 style = MaterialTheme.typography.bodyLarge,
-                color = SnapSlate,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
             )
         }
@@ -132,8 +124,8 @@ private fun AuthPanel(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            color = SnapCreamSurface,
-            border = BorderStroke(1.dp, SnapBorderSoft),
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         ) {
             Column(
                 modifier = Modifier.padding(horizontal = 24.dp, vertical = 36.dp),
@@ -185,7 +177,7 @@ private fun AuthPanel(
                         text = stringResource(
                             if (uiState.isSignUp) R.string.auth_switch_to_sign_in_hint else R.string.auth_switch_to_sign_up_hint,
                         ),
-                        color = SnapCoral,
+                        color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.labelLarge,
                     )
                 }
@@ -206,25 +198,25 @@ private fun AuthTextField(
     isPassword: Boolean = false,
 ) {
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(label, style = MaterialTheme.typography.labelLarge, color = SnapNavy)
+        Text(label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onBackground)
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(placeholder, color = SnapSlate) },
+            placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant) },
             enabled = enabled,
             singleLine = true,
             visualTransformation = if (isPassword) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
             shape = RoundedCornerShape(14.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = SnapCream,
-                unfocusedContainerColor = SnapCream,
-                disabledContainerColor = SnapCream,
-                focusedBorderColor = SnapBorder,
-                unfocusedBorderColor = SnapBorder,
-                focusedTextColor = SnapNavy,
-                unfocusedTextColor = SnapNavy,
+                focusedContainerColor = MaterialTheme.colorScheme.background,
+                unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                disabledContainerColor = MaterialTheme.colorScheme.background,
+                focusedBorderColor = MaterialTheme.colorScheme.outline,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
             ),
         )
     }
@@ -235,9 +227,9 @@ private fun AuthMessage(text: String, isError: Boolean) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(14.dp),
-        color = if (isError) MaterialTheme.colorScheme.errorContainer else SnapCream,
-        contentColor = if (isError) MaterialTheme.colorScheme.error else SnapSlate,
-        border = BorderStroke(1.dp, if (isError) MaterialTheme.colorScheme.error else SnapBorder),
+        color = if (isError) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.background,
+        contentColor = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+        border = BorderStroke(1.dp, if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.outline),
     ) {
         Text(
             text = text,

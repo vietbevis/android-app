@@ -30,8 +30,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import vn.vietbevis.apkbasic.R
 import vn.vietbevis.apkbasic.core.di.AppContainer
 import vn.vietbevis.apkbasic.domain.model.Category
 import vn.vietbevis.apkbasic.domain.model.TransactionType
@@ -42,9 +44,6 @@ import vn.vietbevis.apkbasic.ui.components.CapCard
 import vn.vietbevis.apkbasic.ui.components.CapPillRow
 import vn.vietbevis.apkbasic.ui.components.CapStatusPill
 import vn.vietbevis.apkbasic.ui.theme.APKBasicTheme
-import vn.vietbevis.apkbasic.ui.theme.CapSurfaceHigh
-import vn.vietbevis.apkbasic.ui.theme.CapTextSecondary
-import vn.vietbevis.apkbasic.ui.theme.SnapCream
 
 @Composable
 fun WalletsScreen(
@@ -74,9 +73,9 @@ fun WalletsScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Ví và danh mục", style = MaterialTheme.typography.headlineSmall)
+            Text(stringResource(R.string.wallets_header), style = MaterialTheme.typography.headlineSmall)
             OutlinedButton(onClick = viewModel::refresh, enabled = !uiState.isLoading) {
-                Text("Tải lại")
+                Text(stringResource(R.string.common_reload))
             }
         }
         Spacer(Modifier.height(12.dp))
@@ -98,8 +97,8 @@ fun WalletsScreen(
 
     archiveWallet?.let { wallet ->
         ConfirmArchiveDialog(
-            title = "Lưu trữ ví?",
-            body = "Ví ${wallet.name} sẽ không xuất hiện trong form tạo giao dịch mới.",
+            title = stringResource(R.string.wallets_archive_wallet_title),
+            body = stringResource(R.string.wallets_archive_wallet_body, wallet.name),
             onConfirm = {
                 viewModel.archiveWallet(wallet.id)
                 archiveWallet = null
@@ -109,8 +108,8 @@ fun WalletsScreen(
     }
     archiveCategory?.let { category ->
         ConfirmArchiveDialog(
-            title = "Lưu trữ danh mục?",
-            body = "Danh mục ${category.name} sẽ không xuất hiện trong form tạo giao dịch mới.",
+            title = stringResource(R.string.wallets_archive_category_title),
+            body = stringResource(R.string.wallets_archive_category_body, category.name),
             onConfirm = {
                 viewModel.archiveCategory(category.id)
                 archiveCategory = null
@@ -141,12 +140,12 @@ private fun WalletsContent(
         Spacer(Modifier.height(8.dp))
     }
 
-    Text("Tạo ví", style = MaterialTheme.typography.titleMedium)
+    Text(stringResource(R.string.wallets_create_wallet), style = MaterialTheme.typography.titleMedium)
     OutlinedTextField(
         value = uiState.walletNameInput,
         onValueChange = onWalletNameChange,
         modifier = Modifier.fillMaxWidth(),
-        label = { Text("Tên ví") },
+        label = { Text(stringResource(R.string.wallets_wallet_name)) },
         singleLine = true,
     )
     TypeChips(
@@ -156,12 +155,12 @@ private fun WalletsContent(
         onSelected = onWalletTypeChange,
     )
     Button(onClick = onCreateWallet, modifier = Modifier.fillMaxWidth()) {
-        Text("Thêm ví")
+        Text(stringResource(R.string.wallets_add_wallet))
     }
     Spacer(Modifier.height(16.dp))
-    Text("Danh sách ví", style = MaterialTheme.typography.titleMedium)
+    Text(stringResource(R.string.wallets_list_header), style = MaterialTheme.typography.titleMedium)
     if (uiState.wallets.isEmpty()) {
-        Text("Chưa có ví.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(stringResource(R.string.wallets_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
     } else {
         uiState.wallets.forEach { wallet ->
             Row(
@@ -175,7 +174,7 @@ private fun WalletsContent(
                     Text(wallet.type.displayName(), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 TextButton(onClick = { onArchiveWallet(wallet) }) {
-                    Text("Lưu trữ")
+                    Text(stringResource(R.string.wallets_archive_action))
                 }
             }
             HorizontalDivider()
@@ -183,27 +182,27 @@ private fun WalletsContent(
     }
 
     Spacer(Modifier.height(24.dp))
-    Text("Tạo danh mục", style = MaterialTheme.typography.titleMedium)
+    Text(stringResource(R.string.wallets_create_category), style = MaterialTheme.typography.titleMedium)
     OutlinedTextField(
         value = uiState.categoryNameInput,
         onValueChange = onCategoryNameChange,
         modifier = Modifier.fillMaxWidth(),
-        label = { Text("Tên danh mục") },
+        label = { Text(stringResource(R.string.wallets_category_name)) },
         singleLine = true,
     )
     TypeChips(
         values = TransactionType.entries,
         selected = uiState.categoryTypeInput,
-        label = { if (it == TransactionType.EXPENSE) "Chi" else "Thu" },
+        label = { if (it == TransactionType.EXPENSE) stringResource(R.string.dashboard_expense) else stringResource(R.string.dashboard_income) },
         onSelected = onCategoryTypeChange,
     )
     Button(onClick = onCreateCategory, modifier = Modifier.fillMaxWidth()) {
-        Text("Thêm danh mục")
+        Text(stringResource(R.string.wallets_add_category))
     }
     Spacer(Modifier.height(16.dp))
-    Text("Danh muc", style = MaterialTheme.typography.titleMedium)
+    Text(stringResource(R.string.wallets_category_list_header), style = MaterialTheme.typography.titleMedium)
     uiState.categories.groupBy { it.transactionType }.forEach { (type, categories) ->
-        Text(if (type == TransactionType.EXPENSE) "Chi" else "Thu", style = MaterialTheme.typography.titleSmall)
+        Text(if (type == TransactionType.EXPENSE) stringResource(R.string.dashboard_expense) else stringResource(R.string.dashboard_income), style = MaterialTheme.typography.titleSmall)
         categories.forEach { category ->
             Row(
                 modifier = Modifier
@@ -214,11 +213,11 @@ private fun WalletsContent(
                 Column(Modifier.weight(1f)) {
                     Text(category.name)
                     if (category.isDefault) {
-                        Text("Mặc định", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.wallets_default_label), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                     }
                 }
                 TextButton(onClick = { onArchiveCategory(category) }) {
-                    Text("Lưu trữ")
+                    Text(stringResource(R.string.wallets_archive_action))
                 }
             }
             HorizontalDivider()
@@ -230,7 +229,7 @@ private fun WalletsContent(
 private fun <T> TypeChips(
     values: List<T>,
     selected: T,
-    label: (T) -> String,
+    label: @Composable (T) -> String,
     onSelected: (T) -> Unit,
 ) {
     FlowRow(
@@ -262,22 +261,23 @@ private fun ConfirmArchiveDialog(
         text = { Text(body) },
         confirmButton = {
             Button(onClick = onConfirm) {
-                Text("Lưu trữ")
+                Text(stringResource(R.string.wallets_archive_action))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Hủy")
+                Text(stringResource(R.string.action_cancel))
             }
         },
     )
 }
 
+@Composable
 private fun WalletType.displayName(): String = when (this) {
-    WalletType.CASH -> "Tiền mặt"
-    WalletType.BANK -> "Ngân hàng"
-    WalletType.E_WALLET -> "Ví điện tử"
-    WalletType.OTHER -> "Khác"
+    WalletType.CASH -> stringResource(R.string.wallet_type_cash)
+    WalletType.BANK -> stringResource(R.string.wallet_type_bank)
+    WalletType.E_WALLET -> stringResource(R.string.wallet_type_ewallet)
+    WalletType.OTHER -> stringResource(R.string.wallet_type_other)
 }
 
 @Preview(showBackground = true, name = "Wallets Screen")
@@ -287,7 +287,7 @@ private fun WalletsScreenPreview() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(SnapCream)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
@@ -296,19 +296,19 @@ private fun WalletsScreenPreview() {
                 CapStatusPill("Tiền mặt", selected = true)
                 CapStatusPill("Ngân hàng", selected = false)
             }
-            CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
+            CapCard(modifier = Modifier.fillMaxWidth(), containerColor = MaterialTheme.colorScheme.surfaceContainerHigh) {
                 Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("Tạo ví", style = MaterialTheme.typography.titleLarge)
-                    Text("Tên ví", color = CapTextSecondary)
-                    Text("Loại ví", color = CapTextSecondary)
+                    Text("Tên ví", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Loại ví", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             listOf("Tiền mặt" to "Ví mặc định", "Momo" to "Ví điện tử").forEach { (name, type) ->
-                CapCard(modifier = Modifier.fillMaxWidth(), containerColor = CapSurfaceHigh) {
+                CapCard(modifier = Modifier.fillMaxWidth(), containerColor = MaterialTheme.colorScheme.surfaceContainerHigh) {
                     Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(name, style = MaterialTheme.typography.titleMedium)
-                            Text(type, color = CapTextSecondary)
+                            Text(type, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         Text("Lưu trữ", color = MaterialTheme.colorScheme.primary)
                     }

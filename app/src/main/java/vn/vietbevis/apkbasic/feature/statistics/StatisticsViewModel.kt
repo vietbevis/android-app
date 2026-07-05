@@ -305,7 +305,7 @@ class StatisticsViewModel(
         }
     }
 
-    fun exportCsv(exportType: ExportType): String? {
+    fun exportCsv(exportType: ExportType, context: android.content.Context): String? {
         val state = _uiState.value
         val allTransactions = state.allTransactions
         if (allTransactions.isEmpty()) return null
@@ -320,7 +320,7 @@ class StatisticsViewModel(
 
         val sb = StringBuilder()
         // CSV Header
-        sb.append("Ngày,Loại,Số tiền,Danh mục,Ví,Ghi chú\n")
+        sb.append(context.getString(vn.vietbevis.apkbasic.R.string.statistics_csv_header))
         
         val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
         
@@ -332,11 +332,11 @@ class StatisticsViewModel(
 
         filteredTransactions.forEach { t ->
             val date = dateFormat.format(if (t.updatedAtEpochMillis > 0) t.updatedAtEpochMillis else t.occurredAtEpochMillis)
-            val type = if (t.type == TransactionType.INCOME) "Thu nhập" else "Chi tiêu"
+            val type = if (t.type == TransactionType.INCOME) context.getString(vn.vietbevis.apkbasic.R.string.transaction_income_type) else context.getString(vn.vietbevis.apkbasic.R.string.transaction_expense_type)
             val amountStr = t.amount.formatVnd().replace(",", "")
             
             // Map ID to Name
-            val categoryName = categoryNameMap[t.categoryId] ?: "Khác"
+            val categoryName = categoryNameMap[t.categoryId] ?: context.getString(vn.vietbevis.apkbasic.R.string.wallet_type_other)
             val walletName = walletNameMap[t.walletId] ?: "N/A"
             val note = t.note?.replace("\"", "\"\"") ?: "" // Escape quotes for CSV
             
@@ -349,9 +349,9 @@ class StatisticsViewModel(
         // Add total row for ALL or even specific ones if requested
         val totalMoney = Money.vnd(totalMinorUnits)
         val totalLabel = when (exportType) {
-            ExportType.INCOME -> "Tổng thu nhập"
-            ExportType.EXPENSE -> "Tổng chi tiêu"
-            ExportType.ALL -> "Số dư ròng"
+            ExportType.INCOME -> context.getString(vn.vietbevis.apkbasic.R.string.statistics_total_income)
+            ExportType.EXPENSE -> context.getString(vn.vietbevis.apkbasic.R.string.statistics_total_expense)
+            ExportType.ALL -> context.getString(vn.vietbevis.apkbasic.R.string.statistics_net_balance)
         }
         sb.append("\n,,, $totalLabel,\"${totalMoney.formatVnd().replace(",", "")}\",")
 

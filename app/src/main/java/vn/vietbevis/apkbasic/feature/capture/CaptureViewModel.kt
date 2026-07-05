@@ -111,9 +111,9 @@ class CaptureViewModel(
         }
     }
 
-    fun onPhotoCaptureFailed() {
+    fun onPhotoCaptureFailed(context: android.content.Context) {
         _uiState.update {
-            it.copy(errorMessage = "Không chụp được ảnh. Vui lòng thử lại.", canSaveWithoutPhoto = false)
+            it.copy(errorMessage = context.getString(vn.vietbevis.apkbasic.R.string.capture_error_photo_failed), canSaveWithoutPhoto = false)
         }
     }
 
@@ -213,25 +213,25 @@ class CaptureViewModel(
         }
     }
 
-    fun save() {
-        saveInternal(allowPhotoSkip = false)
+    fun save(context: android.content.Context) {
+        saveInternal(allowPhotoSkip = false, context = context)
     }
 
-    fun saveWithoutPhoto() {
-        saveInternal(allowPhotoSkip = true)
+    fun saveWithoutPhoto(context: android.content.Context) {
+        saveInternal(allowPhotoSkip = true, context = context)
     }
 
-    private fun saveInternal(allowPhotoSkip: Boolean) {
+    private fun saveInternal(allowPhotoSkip: Boolean, context: android.content.Context) {
         val state = uiState.value
         val amount = state.amountInput.toLongOrNull()
         if (amount == null || amount <= 0) {
-            _uiState.update { it.copy(errorMessage = "Nhập số tiền lớn hơn 0.") }
+            _uiState.update { it.copy(errorMessage = context.getString(vn.vietbevis.apkbasic.R.string.capture_error_amount_zero)) }
             return
         }
         val wallet = state.wallets.firstOrNull { it.id == state.selectedWalletId }
         val category = state.categories.firstOrNull { it.id == state.selectedCategoryId }
         if (category == null) {
-            _uiState.update { it.copy(errorMessage = "Chọn danh mục.") }
+            _uiState.update { it.copy(errorMessage = context.getString(vn.vietbevis.apkbasic.R.string.capture_error_no_category)) }
             return
         }
 
@@ -250,7 +250,7 @@ class CaptureViewModel(
         
         val validationErrors = TransactionValidator.validate(baseTransaction, wallet, category)
         if (validationErrors.isNotEmpty()) {
-            _uiState.update { it.copy(errorMessage = "Thông tin giao dịch chưa hợp lệ.") }
+            _uiState.update { it.copy(errorMessage = context.getString(vn.vietbevis.apkbasic.R.string.capture_error_invalid_info)) }
             return
         }
 
@@ -269,7 +269,7 @@ class CaptureViewModel(
                     _uiState.update {
                         it.copy(
                             isSaving = false,
-                            errorMessage = "Upload ảnh thất bại. Bạn có thể thử lại hoặc lưu không ảnh.",
+                            errorMessage = context.getString(vn.vietbevis.apkbasic.R.string.capture_error_upload_failed),
                             canSaveWithoutPhoto = true,
                         )
                     }
@@ -288,7 +288,7 @@ class CaptureViewModel(
             }
 
             result.onSuccess { savedTransaction ->
-                _uiState.update { it.copy(isSaving = false, isSuccess = true, infoMessage = "Đã lưu giao dịch.") }
+                _uiState.update { it.copy(isSaving = false, isSuccess = true, infoMessage = context.getString(vn.vietbevis.apkbasic.R.string.capture_msg_saved)) }
                 viewModelScope.launch {
                     budgetMonitor.checkBudgetsAfterTransaction(savedTransaction)
                 }
