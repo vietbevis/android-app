@@ -8,5 +8,6 @@ drop table if exists public.investments cascade;
 drop table if exists public.loans cascade;
 drop table if exists public.transfers cascade;
 drop table if exists public.recurring_transactions cascade;
+drop table if exists public.transaction_photos cascade;
 
 -- Note: CASCADE will also remove dependent RLS policies, triggers, and foreign keys.
