@@ -1,11 +1,12 @@
--- Drop unused tables that were part of future feature planning
-drop table if exists public.shared_transactions;
-drop table if exists public.group_members;
-drop table if exists public.groups;
-drop table if exists public.friends;
-drop table if exists public.investments;
-drop table if exists public.loans;
-drop table if exists public.transfers;
-drop table if exists public.recurring_transactions;
+-- Drop unused tables with CASCADE to handle dependent policies and foreign keys
+-- These were part of future feature planning but are not currently used.
+drop table if exists public.shared_transactions cascade;
+drop table if exists public.group_members cascade;
+drop table if exists public.groups cascade;
+drop table if exists public.friends cascade;
+drop table if exists public.investments cascade;
+drop table if exists public.loans cascade;
+drop table if exists public.transfers cascade;
+drop table if exists public.recurring_transactions cascade;
 
--- Note: The related triggers and indexes are automatically removed when the tables are dropped.
+-- Note: CASCADE will also remove dependent RLS policies, triggers, and foreign keys.
