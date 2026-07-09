@@ -15,16 +15,26 @@ class SupabaseTransactionRepository(
         monthStartEpochMillis: Long,
         monthEndEpochMillis: Long,
     ): Result<List<Transaction>> = appResult {
+        val startIso = DateCodecs.epochMillisToIso(monthStartEpochMillis)
+        val endIso = DateCodecs.epochMillisToIso(monthEndEpochMillis)
+        
         client.from("transactions")
             .select {
                 filter {
-                    gte("occurred_at", DateCodecs.epochMillisToIso(monthStartEpochMillis))
-                    lt("occurred_at", DateCodecs.epochMillisToIso(monthEndEpochMillis))
+                    and {
+                        gte("occurred_at", startIso)
+                        lt("occurred_at", endIso)
+                    }
                 }
                 order("occurred_at", Order.DESCENDING)
             }
             .decodeList<TransactionDto>()
-            .map { it.toDomain(DateCodecs.isoToEpochMillis(it.occurredAt)) }
+            .map {
+                it.toDomain(
+                    occurredAtEpochMillis = DateCodecs.isoToEpochMillis(it.occurredAt),
+                    updatedAtEpochMillis = it.updatedAt?.let { iso -> DateCodecs.isoToEpochMillis(iso) } ?: 0L
+                )
+            }
     }
 
     override suspend fun getTransaction(transactionId: String): Result<Transaction> = appResult {
@@ -33,7 +43,12 @@ class SupabaseTransactionRepository(
                 filter { eq("id", transactionId) }
             }
             .decodeSingle<TransactionDto>()
-            .let { it.toDomain(DateCodecs.isoToEpochMillis(it.occurredAt)) }
+            .let {
+                it.toDomain(
+                    occurredAtEpochMillis = DateCodecs.isoToEpochMillis(it.occurredAt),
+                    updatedAtEpochMillis = it.updatedAt?.let { iso -> DateCodecs.isoToEpochMillis(iso) } ?: 0L
+                )
+            }
     }
 
     override suspend fun createTransaction(transaction: Transaction): Result<Transaction> = appResult {
@@ -64,5 +79,10 @@ class SupabaseTransactionRepository(
                 filter { eq("id", transactionId) }
             }
             .decodeSingle<TransactionDto>()
-            .let { it.toDomain(DateCodecs.isoToEpochMillis(it.occurredAt)) }
+            .let {
+                it.toDomain(
+                    occurredAtEpochMillis = DateCodecs.isoToEpochMillis(it.occurredAt),
+                    updatedAtEpochMillis = it.updatedAt?.let { iso -> DateCodecs.isoToEpochMillis(iso) } ?: 0L
+                )
+            }
 }

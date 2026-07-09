@@ -11,10 +11,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import vn.vietbevis.apkbasic.R
+import androidx.compose.material3.MaterialTheme
 import vn.vietbevis.apkbasic.ui.components.SnapMessageCard
 import vn.vietbevis.apkbasic.ui.components.SnapSectionHeader
 import vn.vietbevis.apkbasic.ui.theme.APKBasicTheme
-import vn.vietbevis.apkbasic.ui.theme.SnapCream
+
 
 @Composable
 fun PlaceholderScreen(
@@ -25,7 +26,7 @@ fun PlaceholderScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(SnapCream)
+            .background(MaterialTheme.colorScheme.background)
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(18.dp),
     ) {

@@ -18,15 +18,18 @@ import vn.vietbevis.apkbasic.domain.repository.CategoryRepository
 import vn.vietbevis.apkbasic.domain.repository.PhotoRepository
 import vn.vietbevis.apkbasic.domain.repository.TransactionRepository
 import vn.vietbevis.apkbasic.domain.repository.WalletRepository
+import vn.vietbevis.apkbasic.domain.service.BudgetMonitor
 import vn.vietbevis.apkbasic.domain.validation.TransactionValidator
 import java.util.UUID
 
 data class CaptureUiState(
+    val transactionId: String? = null,
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
     val wallets: List<Wallet> = emptyList(),
     val categories: List<Category> = emptyList(),
     val selectedPhotoPath: String? = null,
+    val remotePhotoUrl: String? = null,
     val amountInput: String = "",
     val calculatorState: CalculatorState = CalculatorState(),
     val type: TransactionType = TransactionType.EXPENSE,
@@ -37,6 +40,8 @@ data class CaptureUiState(
     val errorMessage: String? = null,
     val infoMessage: String? = null,
     val canSaveWithoutPhoto: Boolean = false,
+    val isSuccess: Boolean = false,
+    val isAddingCategory: Boolean = false,
 )
 
 class CaptureViewModel(
@@ -45,8 +50,25 @@ class CaptureViewModel(
     private val categoryRepository: CategoryRepository,
     private val transactionRepository: TransactionRepository,
     private val photoRepository: PhotoRepository,
+    private val budgetMonitor: BudgetMonitor,
+    private val initialTransaction: Transaction? = null,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(CaptureUiState())
+    private val _uiState = MutableStateFlow(
+        CaptureUiState(
+            transactionId = initialTransaction?.id,
+            amountInput = initialTransaction?.amount?.minorUnits?.toString() ?: "",
+            calculatorState = CalculatorState(display = initialTransaction?.amount?.minorUnits?.toString() ?: "0"),
+            type = initialTransaction?.type ?: TransactionType.EXPENSE,
+            selectedWalletId = initialTransaction?.walletId,
+            selectedCategoryId = initialTransaction?.categoryId,
+            noteInput = initialTransaction?.note ?: "",
+            occurredAtEpochMillis = initialTransaction?.occurredAtEpochMillis ?: System.currentTimeMillis(),
+            remotePhotoUrl = initialTransaction?.photoPath?.let { path ->
+                val supabaseUrl = vn.vietbevis.apkbasic.BuildConfig.SUPABASE_URL.removeSuffix("/")
+                "$supabaseUrl/storage/v1/object/public/transaction-photos/${path.removePrefix("/")}"
+            }
+        )
+    )
     val uiState: StateFlow<CaptureUiState> = _uiState.asStateFlow()
 
     init {
@@ -67,15 +89,16 @@ class CaptureViewModel(
                 _uiState.update { it.copy(isLoading = false, errorMessage = error.userMessage()) }
                 return@launch
             }
-            val type = _uiState.value.type
-            _uiState.update {
-                it.copy(
+            
+            _uiState.update { state ->
+                val type = state.type
+                state.copy(
                     isLoading = false,
                     wallets = wallets,
                     categories = categories,
-                    selectedWalletId = it.selectedWalletId ?: wallets.firstOrNull()?.id,
-                    selectedCategoryId = it.selectedCategoryId
-                        ?: categories.firstOrNull { category -> category.transactionType == type }?.id,
+                    selectedWalletId = state.selectedWalletId ?: wallets.firstOrNull()?.id,
+                    selectedCategoryId = state.selectedCategoryId
+                        ?: categories.firstOrNull { it.transactionType == type }?.id,
                     errorMessage = null,
                 )
             }
@@ -84,19 +107,19 @@ class CaptureViewModel(
 
     fun onPhotoCaptured(path: String) {
         _uiState.update {
-            it.copy(selectedPhotoPath = path, infoMessage = null, errorMessage = null, canSaveWithoutPhoto = false)
+            it.copy(selectedPhotoPath = path, remotePhotoUrl = null, infoMessage = null, errorMessage = null, canSaveWithoutPhoto = false)
         }
     }
 
-    fun onPhotoCaptureFailed() {
+    fun onPhotoCaptureFailed(context: android.content.Context) {
         _uiState.update {
-            it.copy(errorMessage = "Không chụp được ảnh. Vui lòng thử lại.", canSaveWithoutPhoto = false)
+            it.copy(errorMessage = context.getString(vn.vietbevis.apkbasic.R.string.capture_error_photo_failed), canSaveWithoutPhoto = false)
         }
     }
 
     fun retakePhoto() {
         _uiState.update {
-            it.copy(selectedPhotoPath = null, infoMessage = null, errorMessage = null, canSaveWithoutPhoto = false)
+            it.copy(selectedPhotoPath = null, remotePhotoUrl = null, infoMessage = null, errorMessage = null, canSaveWithoutPhoto = false)
         }
     }
 
@@ -140,33 +163,79 @@ class CaptureViewModel(
         _uiState.update { it.copy(noteInput = value, errorMessage = null) }
     }
 
+    fun showAddCategory(show: Boolean) {
+        _uiState.update { it.copy(isAddingCategory = show) }
+    }
+
+    fun createCategory(name: String) {
+        if (name.isBlank()) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSaving = true, isAddingCategory = false) }
+            val category = Category(
+                id = UUID.randomUUID().toString(),
+                userId = userProfile.id,
+                name = name.trim(),
+                transactionType = _uiState.value.type,
+                icon = "ic_budget",
+                color = "#435875"
+            )
+            categoryRepository.createCategory(category)
+                .onSuccess { newCat ->
+                    _uiState.update { state ->
+                        state.copy(
+                            isSaving = false,
+                            categories = state.categories + newCat,
+                            selectedCategoryId = newCat.id
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(isSaving = false, errorMessage = error.userMessage()) }
+                }
+        }
+    }
+
     fun resetOccurredAtToNow() {
         _uiState.update { it.copy(occurredAtEpochMillis = System.currentTimeMillis()) }
     }
 
-    fun save() {
-        saveInternal(allowPhotoSkip = false)
+    fun delete() {
+        val transactionId = _uiState.value.transactionId ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSaving = true) }
+            transactionRepository.deleteTransaction(transactionId)
+                .onSuccess {
+                    _uiState.update { it.copy(isSaving = false, isSuccess = true) }
+                }
+                .onFailure { error ->
+                    _uiState.update { it.copy(isSaving = false, errorMessage = error.userMessage()) }
+                }
+        }
     }
 
-    fun saveWithoutPhoto() {
-        saveInternal(allowPhotoSkip = true)
+    fun save(context: android.content.Context) {
+        saveInternal(allowPhotoSkip = false, context = context)
     }
 
-    private fun saveInternal(allowPhotoSkip: Boolean) {
+    fun saveWithoutPhoto(context: android.content.Context) {
+        saveInternal(allowPhotoSkip = true, context = context)
+    }
+
+    private fun saveInternal(allowPhotoSkip: Boolean, context: android.content.Context) {
         val state = uiState.value
         val amount = state.amountInput.toLongOrNull()
         if (amount == null || amount <= 0) {
-            _uiState.update { it.copy(errorMessage = "Nhập số tiền lớn hơn 0.") }
+            _uiState.update { it.copy(errorMessage = context.getString(vn.vietbevis.apkbasic.R.string.capture_error_amount_zero)) }
             return
         }
         val wallet = state.wallets.firstOrNull { it.id == state.selectedWalletId }
         val category = state.categories.firstOrNull { it.id == state.selectedCategoryId }
         if (category == null) {
-            _uiState.update { it.copy(errorMessage = "Chọn danh mục.") }
+            _uiState.update { it.copy(errorMessage = context.getString(vn.vietbevis.apkbasic.R.string.capture_error_no_category)) }
             return
         }
 
-        val transactionId = UUID.randomUUID().toString()
+        val transactionId = state.transactionId ?: UUID.randomUUID().toString()
         val baseTransaction = Transaction(
             id = transactionId,
             userId = userProfile.id,
@@ -176,53 +245,58 @@ class CaptureViewModel(
             amount = Money.vnd(amount),
             note = state.noteInput.trim().ifBlank { null },
             occurredAtEpochMillis = state.occurredAtEpochMillis,
-            photoPath = null,
+            photoPath = initialTransaction?.photoPath, // Preserved unless replaced
         )
+        
         val validationErrors = TransactionValidator.validate(baseTransaction, wallet, category)
         if (validationErrors.isNotEmpty()) {
-            _uiState.update { it.copy(errorMessage = "Thông tin giao dịch chưa hợp lệ.") }
+            _uiState.update { it.copy(errorMessage = context.getString(vn.vietbevis.apkbasic.R.string.capture_error_invalid_info)) }
             return
         }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, errorMessage = null, infoMessage = null) }
-            var uploadedPhotoPath: String? = null
+            var uploadedPhotoPath: String? = initialTransaction?.photoPath
 
             if (!allowPhotoSkip && state.selectedPhotoPath != null) {
-                uploadedPhotoPath = photoRepository.uploadTransactionPhoto(
+                photoRepository.uploadTransactionPhoto(
                     userId = userProfile.id,
                     transactionId = transactionId,
                     localPath = state.selectedPhotoPath,
-                ).getOrElse { error ->
+                ).onSuccess {
+                    uploadedPhotoPath = it
+                }.onFailure { error ->
                     _uiState.update {
                         it.copy(
                             isSaving = false,
-                            errorMessage = "Upload ảnh thất bại. Bạn có thể thử lại hoặc lưu không ảnh.",
+                            errorMessage = context.getString(vn.vietbevis.apkbasic.R.string.capture_error_upload_failed),
                             canSaveWithoutPhoto = true,
                         )
                     }
                     return@launch
                 }
+            } else if (allowPhotoSkip) {
+                uploadedPhotoPath = null
             }
 
             val transaction = baseTransaction.copy(photoPath = uploadedPhotoPath)
-            transactionRepository.createTransaction(transaction)
-                .onSuccess {
-                    _uiState.value = CaptureUiState(
-                        isLoading = false,
-                        wallets = state.wallets,
-                        categories = state.categories,
-                        selectedWalletId = state.selectedWalletId,
-                        selectedCategoryId = state.selectedCategoryId,
-                        infoMessage = "Đã lưu giao dịch.",
-                    )
+            
+            val result = if (state.transactionId == null) {
+                transactionRepository.createTransaction(transaction)
+            } else {
+                transactionRepository.updateTransaction(transaction)
+            }
+
+            result.onSuccess { savedTransaction ->
+                _uiState.update { it.copy(isSaving = false, isSuccess = true, infoMessage = context.getString(vn.vietbevis.apkbasic.R.string.capture_msg_saved)) }
+                viewModelScope.launch {
+                    budgetMonitor.checkBudgetsAfterTransaction(savedTransaction)
                 }
-                .onFailure { error ->
-                    uploadedPhotoPath?.let { photoRepository.deleteTransactionPhoto(it) }
-                    _uiState.update {
-                        it.copy(isSaving = false, errorMessage = error.userMessage())
-                    }
+            }.onFailure { error ->
+                _uiState.update {
+                    it.copy(isSaving = false, errorMessage = error.userMessage())
                 }
+            }
         }
     }
 }

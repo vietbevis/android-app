@@ -11,6 +11,7 @@ data class FinanceSummary(
     val expense: Money,
     val netChange: Money,
     val walletBalances: List<WalletBalance>,
+    val incomeByCategory: List<CategoryTotal>,
     val expenseByCategory: List<CategoryTotal>,
     val recentTransactions: List<Transaction>,
 )
@@ -40,6 +41,17 @@ object FinanceSummaryCalculator {
             .sumOf { it.amount.minorUnits }
 
         val categoryById = categories.associateBy { it.id }
+        val incomeByCategory = transactions
+            .filter { it.type == TransactionType.INCOME }
+            .groupBy { it.categoryId }
+            .map { (categoryId, categoryTransactions) ->
+                CategoryTotal(
+                    category = categoryId?.let(categoryById::get),
+                    amount = Money.vnd(categoryTransactions.sumOf { it.amount.minorUnits }),
+                )
+            }
+            .sortedByDescending { it.amount.minorUnits }
+
         val expenseByCategory = transactions
             .filter { it.type == TransactionType.EXPENSE }
             .groupBy { it.categoryId }
@@ -68,6 +80,7 @@ object FinanceSummaryCalculator {
             expense = Money.vnd(expense),
             netChange = Money.vnd(income - expense),
             walletBalances = walletBalances,
+            incomeByCategory = incomeByCategory,
             expenseByCategory = expenseByCategory,
             recentTransactions = transactions
                 .sortedByDescending { it.occurredAtEpochMillis }

@@ -11,8 +11,13 @@ data class MonthRange(
 )
 
 object MonthRanges {
-    fun currentMonth(): MonthRange {
+    fun currentMonth(): MonthRange = offsetMonth(0)
+
+    fun fromOffset(offset: Int): MonthRange = offsetMonth(offset)
+
+    private fun offsetMonth(offset: Int): MonthRange {
         val start = Calendar.getInstance().apply {
+            add(Calendar.MONTH, offset)
             set(Calendar.DAY_OF_MONTH, 1)
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)

@@ -22,7 +22,6 @@ fun UserPreferenceDto.toDomain(): UserPreference = UserPreference(
     language = if (language == "en") AppLanguage.ENGLISH else AppLanguage.VIETNAMESE,
     themeMode = when (themeMode) {
         "light" -> ThemeMode.LIGHT
-        "system" -> ThemeMode.SYSTEM
         else -> ThemeMode.DARK
     },
     currency = currency,
@@ -36,7 +35,6 @@ fun UserPreference.toDto(): UserPreferenceDto = UserPreferenceDto(
     themeMode = when (themeMode) {
         ThemeMode.DARK -> "dark"
         ThemeMode.LIGHT -> "light"
-        ThemeMode.SYSTEM -> "system"
     },
     currency = currency,
     weekStartsOn = if (weekStartsOn == WeekStart.SUNDAY) "sunday" else "monday",

@@ -8,6 +8,7 @@ import vn.vietbevis.apkbasic.core.common.AppError
 import vn.vietbevis.apkbasic.core.common.appResult
 import vn.vietbevis.apkbasic.data.profile.ProfileDto
 import vn.vietbevis.apkbasic.data.profile.toDomain
+import vn.vietbevis.apkbasic.data.profile.toDto
 import vn.vietbevis.apkbasic.domain.model.UserProfile
 import vn.vietbevis.apkbasic.domain.repository.AuthRepository
 
@@ -16,17 +17,19 @@ class SupabaseAuthRepository(
 ) : AuthRepository {
     override suspend fun currentUser(): Result<UserProfile?> = appResult {
         client.auth.awaitInitialization()
-        val userId = client.auth.currentUserOrNull()?.id ?: return@appResult null
-        readProfile(userId) ?: UserProfile(id = userId, displayName = null)
+        val user = client.auth.currentUserOrNull() ?: return@appResult null
+        val profile = readProfile(user.id)
+        profile?.copy(email = user.email) ?: UserProfile(id = user.id, email = user.email, displayName = null)
     }
 
     override suspend fun signIn(email: String, password: String): Result<UserProfile> = appResult {
-        client.auth.signInWith(Email) {
+        val result = client.auth.signInWith(Email) {
             this.email = email.trim()
             this.password = password
         }
-        val userId = client.auth.currentUserOrNull()?.id ?: throw AppError.MissingSession()
-        readProfile(userId) ?: UserProfile(id = userId, displayName = null)
+        val user = client.auth.currentUserOrNull() ?: throw AppError.MissingSession()
+        val profile = readProfile(user.id)
+        profile?.copy(email = user.email) ?: UserProfile(id = user.id, email = user.email, displayName = null)
     }
 
     override suspend fun signUp(email: String, password: String): Result<UserProfile> = appResult {
@@ -35,11 +38,18 @@ class SupabaseAuthRepository(
             this.password = password
         }
         val userId = user?.id ?: client.auth.currentUserOrNull()?.id ?: throw AppError.MissingSession()
-        UserProfile(id = userId, displayName = null)
+        val emailValue = user?.email ?: client.auth.currentUserOrNull()?.email
+        UserProfile(id = userId, email = emailValue, displayName = null)
     }
 
     override suspend fun signOut(): Result<Unit> = appResult {
         client.auth.signOut()
+    }
+
+    override suspend fun updateProfile(profile: UserProfile): Result<UserProfile> = appResult {
+        val dto = profile.toDto()
+        client.from("profiles").upsert(dto)
+        profile
     }
 
     private suspend fun readProfile(userId: String): UserProfile? =

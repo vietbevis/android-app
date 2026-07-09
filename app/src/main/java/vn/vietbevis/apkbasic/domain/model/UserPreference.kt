@@ -17,7 +17,6 @@ enum class AppLanguage {
 enum class ThemeMode {
     DARK,
     LIGHT,
-    SYSTEM,
 }
 
 enum class WeekStart {
